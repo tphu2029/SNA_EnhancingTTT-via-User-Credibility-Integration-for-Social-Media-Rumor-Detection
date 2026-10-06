@@ -1,0 +1,28 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Large dataset files (Exceed GitHub 100MB limit & 137k files)
+data/raw/
+data/processed/*.pkl
+*.pkl
+*.tar.gz
+*.tar.bz2
+
+# OS artifacts
+.DS_Store
+._*
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/

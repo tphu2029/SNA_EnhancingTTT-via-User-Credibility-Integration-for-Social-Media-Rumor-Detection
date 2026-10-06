@@ -1,0 +1,38 @@
+{
+  "thread_id": "535552999624826882",
+  "event": "gurlitt",
+  "label": 0,
+  "is_rumour": "Non-rumour",
+  "source_tweet": {
+    "id": "535552999624826882",
+    "text": "‘The Gurlitt collection should be sold to benefit Jewish organisations’ - The Art Newspaper http://t.co/DZLCSAoGIp",
+    "created_at": "Thu Nov 20 21:59:19 +0000 2014",
+    "user_screen_name": "helen_whittle",
+    "user_verified": false,
+    "user_followers": 543,
+    "user_friends": 934,
+    "credibility_features_12d": [
+      0.0,
+      0.0,
+      1.0,
+      7.646523952484131,
+      6.298949241638184,
+      6.840546607971191,
+      8.21608829498291,
+      7.38585090637207,
+      3.0910425186157227,
+      0.4578985869884491,
+      1.017770528793335,
+      0.36163559556007385
+    ]
+  },
+  "num_reactions": 0,
+  "propagation_metrics": {
+    "tree_size": 1.0,
+    "max_depth": 0.0,
+    "max_breadth": 1.0,
+    "avg_branching": 0.0,
+    "leaf_ratio": 0.0
+  },
+  "edges_sample": []
+}
