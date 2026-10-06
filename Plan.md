@@ -41,7 +41,7 @@ graph TD
     A[Giai đoạn 1: Offline Feature Caching & DataLoader] --> B[Giai đoạn 2: Tái hiện Baseline 3 - Original TTT]
     B --> C[Giai đoạn 3: Huấn luyện Mô hình Đề xuất UC-TTT - RQ1]
     C --> D[Giai đoạn 4: Ablation Studies Chuyên sâu - RQ2]
-    D --> E[Giai đoạn 5: Phân tích Sự kiện, Early Detection - RQ3]
+    D --> E[Giai đoạn 5: Phân tích Sự kiện & Case Studies - RQ3]
     E --> F[Giai đoạn 6: Báo cáo Cuối kỳ, Slide & Hoàn thiện Repo]
 ```
 
@@ -98,15 +98,12 @@ graph TD
 
 ---
 
-### Giai đoạn 5: Phân tích Từng Sự kiện & Khả năng Phát hiện Sớm (Trả lời RQ3)
-* **Mục tiêu:** Phân tích sự khác biệt về hành vi người dùng giữa các sự kiện và đánh giá bài toán Early Detection.
+### Giai đoạn 5: Phân tích Từng Sự kiện & Error Analysis / Case Studies (Trả lời RQ3)
+* **Mục tiêu:** Phân tích sự khác biệt về hành vi người dùng giữa các sự kiện và mổ xẻ các ca dự đoán sai để làm sáng tỏ cơ chế hoạt động của mô hình.
 * **Nhiệm vụ cụ thể:**
   1. **Event-level Analysis (RQ3):** Phân tích xem tại sao User Credibility giúp tăng mạnh F1 ở sự kiện A (ví dụ tin giật gân có sự can thiệp của bot) nhưng lại tăng ít ở sự kiện B.
-  2. **Error Analysis:** Mổ xẻ các trường hợp mô hình đoán sai (False Positives và False Negatives) để rút ra bài học thực tiễn.
-  3. **Early Rumor Detection (Thực nghiệm mở rộng theo yêu cầu GVHD):**
-     - Giới hạn thời gian quan sát cây lan truyền tại các mốc: 1 giờ đầu, 2 giờ đầu, 4 giờ đầu, hoặc chỉ giữ lại 20%, 50% số lượng reaction đầu tiên.
-     - Vẽ biểu đồ đường thể hiện: Cần quan sát bao lâu để mô hình đạt độ chính xác > 75%?
-* **Phụ trách chính:** Tất cả thành viên.
+  2. **Error Analysis & Case Studies:** Mổ xẻ các trường hợp mô hình đoán sai (False Positives và False Negatives) và các ca UC-TTT sửa sai thành công cho TTT gốc để rút ra bài học thực tiễn và đưa vào báo cáo/slide.
+* **Phụ trách chính:** Nguyễn Thị Thanh Mai, Bùi Phạm Bích Phương.
 
 ---
 
@@ -128,7 +125,7 @@ graph TD
 | **23520620** | **Mạc Nguyễn Gia Huy** | Data & Baseline Engineer | Xây dựng pipeline trích xuất text embeddings; Tối ưu hóa DataLoader; Hỗ trợ chạy baseline TTT; Phân tích kết quả thực nghiệm. |
 | **23520278** | **Võ Tấn Đạt** | Experiment & Ablation Specialist | Phụ trách thực hiện toàn bộ chuỗi thực nghiệm Ablation Study; Xây dựng biểu đồ phân tích độ nhạy của các tham số; Thống kê số liệu. |
 | **23520910** | **Nguyễn Thị Thanh Mai** | Feature Engineering & Analysis Lead | Đánh giá phân bố User Credibility; Viết phân tích thống kê RQ2 & RQ3; Viết phần Related Work và Thảo luận kết quả trong báo cáo. |
-| **23521239** | **Bùi Phạm Bích Phương** | Evaluation & Reporting Specialist | Phụ trách thực nghiệm Early Rumor Detection; Đo lường kiểm định thống kê (*p-value*); Thiết kế slide thuyết trình & Tổng hợp báo cáo hoàn chỉnh. |
+| **23521239** | **Bùi Phạm Bích Phương** | Feature Ablation & Reporting Specialist | Phối hợp thực nghiệm Feature-level Ablation; Error Analysis & Tuyển chọn Case Studies; Thiết kế slide thuyết trình & Tổng hợp báo cáo hoàn chỉnh. |
 
 ---
 
