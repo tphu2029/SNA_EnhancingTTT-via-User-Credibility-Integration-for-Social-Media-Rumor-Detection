@@ -3,6 +3,12 @@
 **Môn học:** Mạng Xã Hội | **GVHD:** TS. Trần Hưng Nghiệp  
 **Nhóm:** Nhóm 6 (Trần Thiên Phú, Mạc Nguyễn Gia Huy, Võ Tấn Đạt, Nguyễn Thị Thanh Mai, Bùi Phạm Bích Phương)
 
+### 📚 Tài liệu Quản lý Dự án & Phối hợp Nhóm:
+- 📋 [Kế hoạch chi tiết toàn diện (Plan.md)](Plan.md)
+- ✅ [Danh sách công việc & Backlog GitHub Issues (TODO.md)](TODO.md)
+- 🤝 [Quy trình phối hợp làm việc nhóm & Git Guidelines (CONTRIBUTING.md)](CONTRIBUTING.md)
+- 📝 [Nhật ký tiến độ & Checkpoint (PROGRESS_LOG.md)](PROGRESS_LOG.md)
+
 ---
 
 ## 1. Cấu trúc Dự án
