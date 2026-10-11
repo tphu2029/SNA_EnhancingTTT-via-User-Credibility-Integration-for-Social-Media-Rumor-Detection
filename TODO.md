@@ -53,8 +53,8 @@
 ## 2. CHECKLIST CÔNG VIỆC THEO TỪNG THÀNH VIÊN (PERSONAL BACKLOGS)
 
 ### THÀNH VIÊN 1: TRẦN THIÊN PHÚ - 23521188 (TEAM LEAD)
-- [ ] **Task P-01 (GĐ 2):** Xây dựng module huấn luyện và đánh giá chuẩn cho 9-Fold LOEO (`src/training/engine.py` & `src/training/metrics.py`).
-- [ ] **Task P-02 (GĐ 2):** Lập trình script `experiments/train_ttt_baseline.py` và tái hiện Baseline 3 Original TTT (mục tiêu F1 ~71.98%).
+- [x] **Task P-01 (GĐ 2):** Xây dựng module huấn luyện và đánh giá chuẩn cho 9-Fold LOEO (`src/training/engine.py` & `src/training/metrics.py`).
+- [x] **Task P-02 (GĐ 2):** Lập trình script `experiments/train_ttt_baseline.py` và tái hiện Baseline 3 Original TTT (mục tiêu F1 ~71.98%).
 - [ ] **Task P-03 (GĐ 3):** Lập trình script `experiments/train_ucttt.py`, huấn luyện 9 folds LOEO cho mô hình UC-TTT (mục tiêu F1 > 73.50%).
 - [ ] **Task P-04 (GĐ 3):** Triển khai so sánh 3 cơ chế dung hợp: *Gated Attention*, *Concatenation*, và *Residual Additive*.
 - [ ] **Task P-05 (GĐ 6):** Soạn thảo mục "Proposed Method" và phần mô tả kiến trúc toán học trong Báo cáo cuối kỳ.
@@ -65,7 +65,7 @@
 - [x] **Task H-01 (GĐ 1):** Viết script `experiments/extract_text_embeddings.py` trích xuất offline embedding cho 6,425 source tweets và 105,354 reaction tweets bằng Sentence Transformer.
 - [x] **Task H-02 (GĐ 1):** Lưu trữ cache `data/processed/text_embeddings.pt` và kiểm tra tính toàn vẹn của tensor nhúng.
 - [x] **Task H-03 (GĐ 1):** Lập trình module `src/data/dataset.py` định nghĩa `PHEMETreeDataset` và `collate_fn` gom batch cây lan truyền động (padding, mask, time windows).
-- [ ] **Task H-04 (GĐ 2):** Phối hợp cùng Trưởng nhóm tích hợp DataLoader vào pipeline huấn luyện Baseline 3 và tối ưu GPU memory.
+- [x] **Task H-04 (GĐ 2):** Phối hợp cùng Trưởng nhóm tích hợp DataLoader vào pipeline huấn luyện Baseline 3 và tối ưu GPU memory.
 - [ ] **Task H-05 (GĐ 6):** Hoàn thiện tài liệu hướng dẫn tiền xử lý dữ liệu và cấu trúc pipeline nạp batch trong `README.md`.
 
 ---
@@ -273,10 +273,10 @@ python experiments/train_ttt_baseline.py --epochs 50 --batch_size 32 --lr 2e-4 -
 ```
 
 #### 5. Sản phẩm bàn giao (Deliverables & DoD):
-- [ ] Tệp `experiments/train_ttt_baseline.py` và `src/training/engine.py`.
-- [ ] Tệp kết quả `results/ttt_baseline_results.json` ghi nhận đầy đủ 9 folds.
-- [ ] Checkpoints mô hình được lưu trong `results/checkpoints/ttt_baseline/`.
-- [ ] Bảng tổng hợp so sánh với 2 Baseline trước (TF-IDF+LR và Prop+RF) sẵn sàng cho báo cáo.
+- [x] Tệp `experiments/train_ttt_baseline.py` và `src/training/engine.py`.
+- [x] Tệp kết quả `results/ttt_baseline_results.json` ghi nhận đầy đủ 9 folds.
+- [x] Checkpoints mô hình được lưu trong `results/checkpoints/ttt_baseline/`.
+- [x] Bảng tổng hợp so sánh với 2 Baseline trước (TF-IDF+LR và Prop+RF) sẵn sàng cho báo cáo.
 ```
 
 ---

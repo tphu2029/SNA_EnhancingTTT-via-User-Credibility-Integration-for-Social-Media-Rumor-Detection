@@ -67,38 +67,59 @@
 
 ---
 
-## 3. KẾ HOẠCH BẮT ĐẦU NGAY CHO PHIÊN LÀM VIỆC TIẾP THEO (GIAI ĐOẠN 2)
-
-Trọng tâm tiếp theo là **Giai đoạn 2: Huấn luyện & Tái hiện Baseline 3 — Original TTT (Wu et al. 2025)**:
-
-### Bước 1: Chuẩn bị file Text Embeddings cục bộ
-- Tải file `text_embeddings.pt` từ GitHub Release `v0.1-data-cache` về đặt tại `data/processed/text_embeddings.pt`:
-  ```powershell
-  Invoke-WebRequest -Uri "https://github.com/tphu2029/SNA_EnhancingTTT-via-User-Credibility-Integration-for-Social-Media-Rumor-Detection/releases/download/v0.1-data-cache/text_embeddings.pt" -OutFile "data/processed/text_embeddings.pt"
-  ```
-  *(hoặc chạy trích xuất lại trên máy local: `python experiments/extract_text_embeddings.py`)*
-
-### Bước 2: Xây dựng Training & Evaluation Engine cho 9-Fold LOEO
-- **Nhiệm vụ P-01 / Issue #3:** Tạo `src/training/engine.py` quản lý training loop, validation early stopping, scheduler, và tính metrics chuẩn (Accuracy, Macro-F1).
-- Tích hợp bộ chia 9-fold Leave-One-Event-Out (`src/utils/loeo_splitter.py`).
-
-### Bước 3: Lập trình script huấn luyện Baseline 3 (`experiments/train_ttt_baseline.py`)
-- Cấu hình mô hình `UCTTTClassifier` với cờ `use_user_credibility=False` để tái hiện mô hình TTT nguyên bản của Wu et al. 2025.
-- Chạy huấn luyện trên 9 folds LOEO, lưu checkpoint tốt nhất vào `results/ttt_baseline/` và tổng hợp kết quả đối chứng (kỳ vọng Macro-F1 ~71.98%).
+---
 
 ---
 
-## 4. CÁC LỆNH ĐIỀU HÀNH NHANH (QUICK COMMANDS)
+## 3. CHECKPOINT NGÀY 11/10/2026: HOÀN THÀNH GIAI ĐOẠN 2 (TÁI HIỆN BASELINE 3 ORIGINAL TTT)
+
+### 3.1. Đã hoàn thành các nhiệm vụ Giai đoạn 2 (Milestone 2 / Issue #3)
+- **Module huấn luyện & đánh giá:**
+  - [`src/training/engine.py`](src/training/engine.py): Hiện thực `EarlyStopping` (theo dõi Validation Macro-F1), `train_one_epoch`, và `evaluate_epoch`.
+  - [`src/training/metrics.py`](src/training/metrics.py): Hiện thực `calculate_metrics_from_tensors` và các hàm xuất chỉ số chuẩn.
+  - [`src/training/__init__.py`](src/training/__init__.py): Package init.
+- **Script huấn luyện LOEO:**
+  - [`experiments/train_ttt_baseline.py`](experiments/train_ttt_baseline.py): Hỗ trợ cả 2 chế độ `--events_mode 5` (PHEME v5 - chuẩn đối chứng Wu et al. 2025) và `--events_mode 9` (full PHEME).
+  - Tinh chỉnh AdamW ($lr=1e-4$), Cosine Annealing scheduler, class-weighted CrossEntropyLoss.
+  - Checkpoints tốt nhất đã được lưu tại `results/checkpoints/ttt_baseline/`.
+- **Kết quả thực nghiệm chính thức (Đối chiếu 1-1 với bài báo Wu et al. 2025):**
+  - **Chuẩn 5 sự kiện PHEME v5 (Wu et al. 2025):**
+    - **Pooled Accuracy: 74.06%** (so với 75.84% bài báo, chênh lệch chỉ 1.78%).
+    - **Pooled Macro-F1: 70.02%** (so với 71.98% bài báo, chênh lệch chỉ 1.96%).
+    - **Mean LOEO Accuracy: 71.81% ± 5.58%**; **Mean LOEO Macro-F1: 66.08% ± 6.40%**.
+    - Đặc biệt, fold `ottawashooting` đạt **70.22% Acc** và **69.75% F1** (trùng khớp gần như tuyệt đối với 70.25% Acc và 69.54% F1 trong Table 3 của bài báo).
+  - **Mở rộng 9 sự kiện full PHEME:**
+    - **Pooled Accuracy: 72.22%**; **Pooled Macro-F1: 70.50%**.
+    - Mean LOEO Macro-F1: 56.24% ± 16.34% (do 4 sự kiện dị biệt/lệch pha nặng như `prince-toronto` 98% rumour và `ebola-essien` kéo tụt).
+  - File kết quả: [`results/ttt_baseline_results.json`](results/ttt_baseline_results.json).
+
+---
+
+## 4. KẾ HOẠCH BẮT ĐẦU NGAY CHO PHIÊN LÀM VIỆC TIẾP THEO (GIAI ĐOẠN 3)
+
+Trọng tâm tiếp theo là **Giai đoạn 3: Huấn luyện & Đánh giá Mô hình Đề xuất UC-TTT (Trả lời RQ1 & Giả thuyết H1)**:
+
+### Bước 1: Kích hoạt nhánh User Credibility
+- Sử dụng mô hình `UCTTTClassifier` với cờ `use_user_credibility=True` để kết hợp 12 đặc trưng uy tín người dùng qua mạng MLP và cổng động Gated Fusion.
+- Viết script `experiments/train_ucttt.py`.
+
+### Bước 2: Thử nghiệm 3 cơ chế dung hợp (Fusion Strategies)
+- So sánh `fusion_type='gated'`, `fusion_type='concat'`, và `fusion_type='additive'`.
+
+### Bước 3: Huấn luyện 9-fold LOEO & Kiểm định Thống kê
+- Chạy 9 folds LOEO cho UC-TTT, so sánh trực tiếp với mốc **70.50% Pooled F1** của Baseline 3.
+- Chạy kiểm định ý nghĩa thống kê (*paired t-test* / *Wilcoxon signed-rank test*, $p < 0.05$) trên 9 folds để khẳng định độ tin cậy khoa học của kết quả cải thiện.
+
+---
+
+## 5. CÁC LỆNH ĐIỀU HÀNH NHANH (QUICK COMMANDS)
 
 ```bash
 # Kiểm tra trạng thái Git
 git status
 
-# Kiểm tra dữ liệu cache & DataLoader
-python -m pytest tests/test_dataloader.py -k test_toy_tree
-
-# Chạy trích xuất text embeddings (nếu cần tự sinh local)
-python experiments/extract_text_embeddings.py --batch_size 256
+# Xem kết quả Benchmark Baseline 3 vừa hoàn thành
+python -c "import json; d=json.load(open('results/ttt_baseline_results.json')); print('Baseline 3 Pooled F1:', d['pooled']['macro_f1'], '| Acc:', d['pooled']['accuracy'])"
 
 # Kiểm tra CUDA GPU
 python -c "import torch; print('CUDA Available:', torch.cuda.is_available(), '| Device:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'None')"

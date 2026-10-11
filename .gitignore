@@ -17,6 +17,7 @@ data/processed/*.pkl
 *.pkl
 *.tar.gz
 *.tar.bz2
+*.zip
 
 # OS artifacts
 .DS_Store
@@ -29,4 +30,6 @@ Thumbs.db
 results/checkpoints/*.pth
 
 data/processed/*.pt
-results/checkpoints/*.pth
+results/**/checkpoints/
+*.pth
+*.pt
