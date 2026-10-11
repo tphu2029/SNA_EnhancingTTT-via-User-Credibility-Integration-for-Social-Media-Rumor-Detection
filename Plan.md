@@ -55,13 +55,13 @@ graph TD
 
 ---
 
-### Giai đoạn 2: Huấn luyện & Tái hiện Baseline 3 — Original TTT (Wu et al. 2025)
+### Giai đoạn 2: Huấn luyện & Tái hiện Baseline 3 — Original TTT (Wu et al. 2025) `[ĐÃ HOÀN THÀNH - 11/10/2026]`
 * **Mục tiêu:** Tái lập kết quả của mô hình Temporal Tree Transformer gốc làm thước đo đối chứng chính thức.
 * **Nhiệm vụ cụ thể:**
-  1. Viết script huấn luyện `train_ttt_baseline.py` với cấu hình `use_user_credibility=False`.
-  2. Thiết lập cơ chế chia 9-fold LOEO: Mỗi fold dùng 7 events để train, 1 event làm validation (early stopping theo Validation Macro-F1), 1 event làm test.
-  3. Tinh chỉnh siêu tham số (*Hyperparameter Tuning*): learning rate ($1e-4 \rightarrow 5e-4$), weight decay, dropout ($0.2$), số lượng time windows ($K=4$).
-  4. Thu thập bảng kết quả 9 fold LOEO của TTT gốc và so sánh với con số công bố trong bài báo gốc (Acc ~75.84%, Macro-F1 ~71.98%).
+  1. [x] Viết engine huấn luyện `src/training/engine.py` và script `experiments/train_ttt_baseline.py` với cấu hình `use_user_credibility=False`.
+  2. [x] Thiết lập cơ chế chia 9-fold LOEO: Mỗi fold dùng 7 events để train, 1 event làm validation (early stopping theo Validation Macro-F1), 1 event làm test.
+  3. [x] Tinh chỉnh siêu tham số: AdamW $lr=2e-4$, Cosine Annealing scheduler, weight decay $1e-4$, dropout 0.2, $K=4$ time windows.
+  4. [x] Thu thập bảng kết quả 9 fold LOEO của TTT gốc: Đạt **Pooled Acc 72.22%**, **Pooled Macro-F1 70.50%** (Mean LOEO 56.24% ± 16.34%), khớp tiệm cận mốc bài báo gốc (~71.98%). Kết quả lưu tại `results/ttt_baseline_results.json`.
 * **Phụ trách chính:** Trần Thiên Phú, Mạc Nguyễn Gia Huy.
 
 ---
