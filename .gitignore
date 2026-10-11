@@ -26,3 +26,7 @@ Thumbs.db
 # IDEs
 .vscode/
 .idea/
+results/checkpoints/*.pth
+
+data/processed/*.pt
+results/checkpoints/*.pth
