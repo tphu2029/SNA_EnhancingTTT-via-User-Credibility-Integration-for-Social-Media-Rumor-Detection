@@ -45,12 +45,12 @@ graph TD
     E --> F[Giai đoạn 6: Báo cáo Cuối kỳ, Slide & Hoàn thiện Repo]
 ```
 
-### Giai đoạn 1: Offline Text Feature Caching & PyTorch DataLoader
+### Giai đoạn 1: Offline Text Feature Caching & PyTorch DataLoader `[ĐÃ HOÀN THÀNH - 11/10/2026]`
 * **Mục tiêu:** Tạo vector biểu diễn ngữ nghĩa của văn bản tweet và xây dựng pipeline nạp dữ liệu tốc độ cao.
 * **Nhiệm vụ cụ thể:**
-  1. Sử dụng Pretrained Sentence Transformer (ví dụ: `all-MiniLM-L6-v2` hoặc `DeBERTa-v3-small`) để trích xuất offline embedding cho toàn bộ tweet gốc và reactions (giúp quá trình train mô hình nhanh gấp 20 lần so với fine-tune trực tiếp).
-  2. Viết class `PHEMETreeDataset` và hàm `collate_fn` gom batch động: padding độ dài cây, tạo adjacency reachability matrix, chia time windows.
-* **Thời hạn:** Tuần này
+  1. [x] Sử dụng Pretrained Sentence Transformer (ví dụ: `all-MiniLM-L6-v2` hoặc `DeBERTa-v3-small`) để trích xuất offline embedding cho toàn bộ tweet gốc và reactions (`experiments/extract_text_embeddings.py` - Release tag `v0.1-data-cache`).
+  2. [x] Viết class `PHEMETreeDataset` và hàm `collate_tree_batch` gom batch động: padding độ dài cây, tạo adjacency reachability matrix, chia time windows (`src/data/dataset.py`, `tests/test_dataloader.py`).
+* **Thời hạn:** Tuần này (Đã hoàn thành xuất sắc)
 * **Phụ trách chính:** Mạc Nguyễn Gia Huy, Võ Tấn Đạt.
 
 ---

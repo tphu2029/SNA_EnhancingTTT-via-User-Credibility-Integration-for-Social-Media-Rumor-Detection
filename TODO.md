@@ -62,16 +62,16 @@
 ---
 
 ### THÀNH VIÊN 2: MẠC NGUYỄN GIA HUY - 23520620
-- [ ] **Task H-01 (GĐ 1):** Viết script `experiments/extract_text_embeddings.py` trích xuất offline embedding cho 6,425 source tweets và 105,354 reaction tweets bằng Sentence Transformer.
-- [ ] **Task H-02 (GĐ 1):** Lưu trữ cache `data/processed/text_embeddings.pt` và kiểm tra tính toàn vẹn của tensor nhúng.
-- [ ] **Task H-03 (GĐ 1):** Lập trình module `src/data/dataset.py` định nghĩa `PHEMETreeDataset` và `collate_fn` gom batch cây lan truyền động (padding, mask, time windows).
+- [x] **Task H-01 (GĐ 1):** Viết script `experiments/extract_text_embeddings.py` trích xuất offline embedding cho 6,425 source tweets và 105,354 reaction tweets bằng Sentence Transformer.
+- [x] **Task H-02 (GĐ 1):** Lưu trữ cache `data/processed/text_embeddings.pt` và kiểm tra tính toàn vẹn của tensor nhúng.
+- [x] **Task H-03 (GĐ 1):** Lập trình module `src/data/dataset.py` định nghĩa `PHEMETreeDataset` và `collate_fn` gom batch cây lan truyền động (padding, mask, time windows).
 - [ ] **Task H-04 (GĐ 2):** Phối hợp cùng Trưởng nhóm tích hợp DataLoader vào pipeline huấn luyện Baseline 3 và tối ưu GPU memory.
 - [ ] **Task H-05 (GĐ 6):** Hoàn thiện tài liệu hướng dẫn tiền xử lý dữ liệu và cấu trúc pipeline nạp batch trong `README.md`.
 
 ---
 
 ### THÀNH VIÊN 3: VÕ TẤN ĐẠT - 23520278
-- [ ] **Task D-01 (GĐ 1):** Hỗ trợ kiểm thử và benchmark tốc độ gom batch động của DataLoader trên CPU và GPU.
+- [x] **Task D-01 (GĐ 1):** Hỗ trợ kiểm thử và benchmark tốc độ gom batch động của DataLoader trên CPU và GPU.
 - [ ] **Task D-02 (GĐ 4):** Xây dựng script điều phối ablation tự động `experiments/run_ablation.py` hỗ trợ các cờ lệnh `--ablation_mode`.
 - [ ] **Task D-03 (GĐ 4):** Thực hiện Model-level Ablation trên 9 folds LOEO (`w/o Temporal GRU` và `w/o Tree Transformer`).
 - [ ] **Task D-04 (GĐ 4):** Thống kê kết quả thực nghiệm bóc tách, viết script `experiments/plot_ablation_results.py` sinh biểu đồ cột độ suy giảm F1.
@@ -151,10 +151,10 @@ python experiments/extract_text_embeddings.py --model_name all-MiniLM-L6-v2 --ba
 ```
 
 #### 5. Sản phẩm bàn giao (Deliverables & DoD):
-- [ ] Tệp `experiments/extract_text_embeddings.py` hoàn chỉnh, có log tiến độ `tqdm`.
-- [ ] Tệp cache `data/processed/text_embeddings.pt` sẵn sàng trong thư mục dữ liệu cục bộ.
-- [ ] Đã upload `text_embeddings.pt` lên **GitHub Releases (Tag `v0.1-data-cache`)**.
-- [ ] Bổ sung đường dẫn `data/processed/*.pt` vào `.gitignore` để tránh đẩy file nặng lên Git commit.
+- [x] Tệp `experiments/extract_text_embeddings.py` hoàn chỉnh, có log tiến độ `tqdm`.
+- [x] Tệp cache `data/processed/text_embeddings.pt` sẵn sàng trong thư mục dữ liệu cục bộ.
+- [x] Đã upload `text_embeddings.pt` lên **GitHub Releases (Tag `v0.1-data-cache`)**.
+- [x] Bổ sung đường dẫn `data/processed/*.pt` vào `.gitignore` để tránh đẩy file nặng lên Git commit.
 ```
 
 ---
@@ -216,8 +216,8 @@ python tests/test_dataloader.py
 ```
 
 #### 5. Sản phẩm bàn giao (Deliverables & DoD):
-- [ ] Tệp `src/data/dataset.py` hoạt động ổn định, nạp dữ liệu nhanh (< 0.1s / batch).
-- [ ] Test suite `tests/test_dataloader.py` pass 100%, shape tensor khớp với input của `src/models/ucttt_classifier.py`.
+- [x] Tệp `src/data/dataset.py` hoạt động ổn định, nạp dữ liệu nhanh (< 0.1s / batch).
+- [x] Test suite `tests/test_dataloader.py` pass 100%, shape tensor khớp với input của `src/models/ucttt_classifier.py`.
 ```
 
 ---

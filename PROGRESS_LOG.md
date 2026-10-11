@@ -50,45 +50,56 @@
 
 ---
 
-## 2. KẾ HOẠCH BẮT ĐẦU NGAY CHO PHIÊN LÀM VIỆC TIẾP THEO
+## 2. CHECKPOINT NGÀY 11/10/2026: HOÀN THÀNH GIAI ĐOẠN 1 (OFFLINE EMBEDDINGS & DATALOADER)
 
-Khi bắt đầu phiên làm việc mới, agent sẽ đọc file này và tiếp tục ngay từ **Giai đoạn 1 & 2** với các bước cụ thể:
-
-### Bước 1: Trích xuất Offline Text Embeddings (Sentence Transformer / RoBERTa)
-- **Mục tiêu:** Chuyển đổi câu chữ của 6,425 tweet gốc và ~105,000 reactions thành vector nhúng ngữ nghĩa tĩnh (ví dụ: dùng mô hình `all-MiniLM-L6-v2` kích thước 384-d hoặc `deberta-v3-small`).
-- **Lợi ích:** Lưu cache ra đĩa `data/processed/text_embeddings.pt` để khi huấn luyện mô hình sâu (TTT & UC-TTT), mỗi epoch chỉ mất vài giây thay vì phải chạy fine-tune text tốn hàng giờ.
-- **Tệp cần tạo:** `experiments/extract_text_embeddings.py`.
-
-### Bước 2: Xây dựng PyTorch Dataset & Dynamic Collate Function
-- **Mục tiêu:** Tạo `PHEMETreeDataset` và `collate_fn` để nạp batch dữ liệu dạng đồ thị cây:
-  - Padding số lượng node trong batch.
-  - Sinh ma trận quan hệ cây (Tree adjacency / attention mask).
-  - Phân chia các node vào các time windows.
-- **Tệp cần tạo:** `src/data/dataset.py`.
-
-### Bước 3: Huấn luyện Baseline 3 — Original TTT (Wu et al. 2025)
-- **Mục tiêu:** Chạy huấn luyện 9 folds LOEO cho TTT gốc (`use_user_credibility=False`).
-- **Đánh giá:** Ghi nhận chỉ số Macro-F1 đối chứng chuẩn (mục tiêu tái lập tiệm cận ~71.98% như bài báo).
-- **Tệp cần tạo:** `experiments/train_ttt.py`.
-
-### Bước 4: Huấn luyện Mô hình Đề xuất UC-TTT & So sánh (Trả lời RQ1)
-- **Mục tiêu:** Kích hoạt `use_user_credibility=True` và chạy 9 folds LOEO.
-- **Đánh giá:** Tính độ chênh lệch Macro-F1 giữa UC-TTT và TTT gốc, chạy kiểm định thống kê (*paired t-test*).
+### 2.1. Đã hoàn thành các nhiệm vụ Giai đoạn 1 (Milestone 1)
+- **Issue #1 / PR #9 (`feat(data): implement offline embedding extraction with MiniLM`):**
+  - Đã xây dựng script [`experiments/extract_text_embeddings.py`](experiments/extract_text_embeddings.py) trích xuất offline sentence embedding (384 chiều) bằng `sentence-transformers/all-MiniLM-L6-v2`.
+  - Hỗ trợ batch encoding trên GPU CUDA với thanh tiến trình `tqdm`.
+  - Thiết lập quy trình phát hành cache qua **GitHub Releases Tag `v0.1-data-cache`** để chia sẻ file dữ liệu nặng `text_embeddings.pt` mà không làm phình repo Git.
+  - Cập nhật [`.gitignore`](.gitignore) chặn file `data/processed/*.pt`.
+- **Issue #2 / PR #10 (`feat(data): implement PHEMETreeDataset and collate_tree_batch`):**
+  - Đã xây dựng module [`src/data/dataset.py`](src/data/dataset.py) định nghĩa lớp `PHEMETreeDataset` và hàm gom batch động `collate_tree_batch`.
+  - Hỗ trợ dynamic padding ma trận attention, liên kết cạnh tổ tiên-con cháu, và phân bổ các node vào $K=4$ equal-depth time windows.
+  - Đã viết unit test hoàn chỉnh tại [`tests/test_dataloader.py`](tests/test_dataloader.py) (test mock batch và test real batch).
+- **Trạng thái Git:**
+  - Cả 2 PR #9 và #10 đã được merge thành công vào nhánh `main` (commit `453b43d`).
 
 ---
 
-## 3. CÁC LỆNH ĐIỀU HÀNH NHANH (QUICK COMMANDS)
+## 3. KẾ HOẠCH BẮT ĐẦU NGAY CHO PHIÊN LÀM VIỆC TIẾP THEO (GIAI ĐOẠN 2)
+
+Trọng tâm tiếp theo là **Giai đoạn 2: Huấn luyện & Tái hiện Baseline 3 — Original TTT (Wu et al. 2025)**:
+
+### Bước 1: Chuẩn bị file Text Embeddings cục bộ
+- Tải file `text_embeddings.pt` từ GitHub Release `v0.1-data-cache` về đặt tại `data/processed/text_embeddings.pt`:
+  ```powershell
+  Invoke-WebRequest -Uri "https://github.com/tphu2029/SNA_EnhancingTTT-via-User-Credibility-Integration-for-Social-Media-Rumor-Detection/releases/download/v0.1-data-cache/text_embeddings.pt" -OutFile "data/processed/text_embeddings.pt"
+  ```
+  *(hoặc chạy trích xuất lại trên máy local: `python experiments/extract_text_embeddings.py`)*
+
+### Bước 2: Xây dựng Training & Evaluation Engine cho 9-Fold LOEO
+- **Nhiệm vụ P-01 / Issue #3:** Tạo `src/training/engine.py` quản lý training loop, validation early stopping, scheduler, và tính metrics chuẩn (Accuracy, Macro-F1).
+- Tích hợp bộ chia 9-fold Leave-One-Event-Out (`src/utils/loeo_splitter.py`).
+
+### Bước 3: Lập trình script huấn luyện Baseline 3 (`experiments/train_ttt_baseline.py`)
+- Cấu hình mô hình `UCTTTClassifier` với cờ `use_user_credibility=False` để tái hiện mô hình TTT nguyên bản của Wu et al. 2025.
+- Chạy huấn luyện trên 9 folds LOEO, lưu checkpoint tốt nhất vào `results/ttt_baseline/` và tổng hợp kết quả đối chứng (kỳ vọng Macro-F1 ~71.98%).
+
+---
+
+## 4. CÁC LỆNH ĐIỀU HÀNH NHANH (QUICK COMMANDS)
 
 ```bash
 # Kiểm tra trạng thái Git
 git status
 
-# Kiểm tra dữ liệu cache đã sẵn sàng chưa
-python -c "import pickle; d=pickle.load(open('data/processed/pheme_processed.pkl','rb')); print('Dataset loaded, total threads:', len(d))"
+# Kiểm tra dữ liệu cache & DataLoader
+python -m pytest tests/test_dataloader.py -k test_toy_tree
+
+# Chạy trích xuất text embeddings (nếu cần tự sinh local)
+python experiments/extract_text_embeddings.py --batch_size 256
 
 # Kiểm tra CUDA GPU
 python -c "import torch; print('CUDA Available:', torch.cuda.is_available(), '| Device:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'None')"
-
-# Chạy lại hai mô hình Baseline cơ sở
-python experiments/run_baselines.py
 ```
