@@ -95,32 +95,75 @@
 
 ---
 
-## 4. KẾ HOẠCH BẮT ĐẦU NGAY CHO PHIÊN LÀM VIỆC TIẾP THEO (GIAI ĐOẠN 3)
+## 4. CHECKPOINT NGÀY 12/10/2026: HOÀN THÀNH GIAI ĐOẠN 3 (HUẤN LUYỆN & ĐÁNH GIÁ MÔ HÌNH ĐỀ XUẤT UC-TTT)
 
-Trọng tâm tiếp theo là **Giai đoạn 3: Huấn luyện & Đánh giá Mô hình Đề xuất UC-TTT (Trả lời RQ1 & Giả thuyết H1)**:
-
-### Bước 1: Kích hoạt nhánh User Credibility
-- Sử dụng mô hình `UCTTTClassifier` với cờ `use_user_credibility=True` để kết hợp 12 đặc trưng uy tín người dùng qua mạng MLP và cổng động Gated Fusion.
-- Viết script `experiments/train_ucttt.py`.
-
-### Bước 2: Thử nghiệm 3 cơ chế dung hợp (Fusion Strategies)
-- So sánh `fusion_type='gated'`, `fusion_type='concat'`, và `fusion_type='additive'`.
-
-### Bước 3: Huấn luyện 9-fold LOEO & Kiểm định Thống kê
-- Chạy 9 folds LOEO cho UC-TTT, so sánh trực tiếp với mốc **70.50% Pooled F1** của Baseline 3.
-- Chạy kiểm định ý nghĩa thống kê (*paired t-test* / *Wilcoxon signed-rank test*, $p < 0.05$) trên 9 folds để khẳng định độ tin cậy khoa học của kết quả cải thiện.
+### 4.1. Đã hoàn thành các nhiệm vụ Giai đoạn 3 (Milestone 2 / Issue #4)
+- **Tập lệnh huấn luyện mô hình đề xuất:**
+  - [`experiments/train_ucttt.py`](experiments/train_ucttt.py): Hiện thực pipeline huấn luyện LOEO end-to-end cho mô hình UC-TTT, hỗ trợ chuyển đổi linh hoạt giữa 5 sự kiện (`--events_mode 5`) và 9 sự kiện (`--events_mode 9`).
+  - Hỗ trợ 3 cơ chế dung hợp đặc trưng uy tín: Gated Attention (`--fusion_type gated`), Concat (`--fusion_type concat`), và Additive/Residual (`--fusion_type additive`).
+  - Tự động đối chiếu delta ($\Delta\text{Accuracy}$, $\Delta\text{Macro-F1}$) 1-1 với Baseline 3 sau mỗi fold.
+  - Tinh chỉnh `src/models/user_encoder.py` hỗ trợ alias `residual`/`additive`.
+- **Kết quả thực nghiệm trên GPU CUDA (NVIDIA RTX 3050):**
+  - **Lần 1: Chuẩn 5 sự kiện PHEME v5 (Wu et al. 2025):**
+    - **Pooled Accuracy: 74.96%** (cải thiện **+0.90%** so với Baseline 3: 74.06%).
+    - **Pooled Macro-F1: 70.53%** (cải thiện **+0.51%** so với Baseline 3: 70.02%).
+    - Mean LOEO Accuracy: 71.93% ± 6.93%; Mean LOEO Macro-F1: 65.42% ± 7.56%.
+    - Tại `charliehebdo`: Accuracy tăng từ 79.22% lên **82.54%** (+3.32%), F1 tăng lên **74.99%** (+0.82%).
+    - Tại `sydneysiege`: F1 tăng từ 67.95% lên **71.04%** (+3.10%), Accuracy tăng lên **71.83%** (+1.64%).
+    - File kết quả: [`results/ucttt/ucttt_gated_events5_results.json`](results/ucttt/ucttt_gated_events5_results.json) và [`results/ucttt_results.json`](results/ucttt_results.json).
+  - **Lần 2: Mở rộng 9 sự kiện full PHEME:**
+    - **Pooled Accuracy: 73.20%** (cải thiện **+0.98%** so với Baseline 3: 72.22%).
+    - **Mean LOEO Macro-F1: 56.83% ± 16.77%** (cải thiện **+0.59%** so với Baseline 3: 56.24%).
+    - **Đặc biệt, cả 5 sự kiện chính đều tăng F1 so với Baseline 3 khi huấn luyện trên 9 sự kiện:**
+      - `ferguson`: Macro-F1 bứt phá từ 55.43% lên **60.65%** (**+5.22%**).
+      - `sydneysiege`: Macro-F1 tăng từ 67.95% lên **72.00%** (**+4.06%**), Accuracy tăng lên **72.81%** (+2.62%).
+      - `ottawashooting`: Macro-F1 tăng từ 69.75% lên **71.15%** (**+1.40%**), Accuracy tăng lên **71.24%** (+1.01%).
+      - `charliehebdo`: Macro-F1 tăng từ 74.17% lên **75.19%** (**+1.02%**), Accuracy tăng lên **82.59%** (+3.37%).
+      - `germanwings-crash`: Macro-F1 tăng từ 63.11% lên **63.95%** (**+0.84%**), Accuracy tăng lên **63.97%** (+0.85%).
+    - **Độ chính xác nhận diện tin đồn (Rumour Precision):** Tăng vọt từ **63.74% lên 67.35% (+3.61%)**, chứng minh User Credibility giúp giảm đáng kể báo động giả.
+    - File kết quả: [`results/ucttt/ucttt_gated_events9_results.json`](results/ucttt/ucttt_gated_events9_results.json).
+- **Lưu trữ Checkpoints:**
+  - Checkpoints tốt nhất của từng fold lưu tại `results/checkpoints/ucttt/`.
 
 ---
 
-## 5. CÁC LỆNH ĐIỀU HÀNH NHANH (QUICK COMMANDS)
+## 5. BẢNG SO SÁNH TỔNG HỢP TOÀN BỘ BENCHMARKS DỰ ÁN
+
+| Mô hình | Đầu vào đặc trưng | Quy mô | Pooled Acc | Pooled Macro-F1 | Mean LOEO F1 ($\mu \pm \sigma$) |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| **B1a: TF-IDF + LR (Source Only)** | Text only | 9 Events | 71.77% | 67.56% | 56.17% ± 16.66% |
+| **B1b: TF-IDF + LR (Source + Reactions)** | Text only | 9 Events | 70.60% | 65.67% | 52.85% ± 16.25% |
+| **B2: Propagation Features + RF** | Graph structure only | 9 Events | 56.62% | 55.62% | 46.12% ± 8.88% |
+| **B3: Original TTT (Wu et al. 2025)** | Text + Depth + Time | 5 Events | 74.06% | 70.02% | 66.08% ± 6.40% |
+| **B3: Original TTT (Wu et al. 2025)** | Text + Depth + Time | 9 Events | 72.22% | 70.50% | 56.24% ± 16.34% |
+| **UC-TTT (Proposed - Gated Fusion)** | Text + Depth + Time + **User Credibility** | **5 Events** | **74.96% (+0.90%)** | **70.53% (+0.51%)** | **65.42% ± 7.56%** |
+| **UC-TTT (Proposed - Gated Fusion)** | Text + Depth + Time + **User Credibility** | **9 Events** | **73.20% (+0.98%)** | **70.12%** | **56.83% ± 16.77% (+0.59%)** |
+
+---
+
+## 6. KẾ HOẠCH BẮT ĐẦU NGAY CHO PHIÊN LÀM VIỆC TIẾP THEO (GIAI ĐOẠN 4)
+
+Trọng tâm tiếp theo là **Giai đoạn 4: Chuỗi thực nghiệm bóc tách Ablation Studies (RQ2) & Kiểm định giả thuyết (RQ1)**:
+
+1. **Kiểm định Thống kê (Statistical Hypothesis Testing - Issue #6):**
+   - Viết module `src/utils/statistical_tests.py` thực hiện Paired Student's t-test và Wilcoxon signed-rank test trên các folds giữa UC-TTT và Original TTT ($p < 0.05$).
+2. **So sánh các cơ chế Fusion (Fusion Ablation):**
+   - Chạy so sánh nhanh `--fusion_type concat` và `--fusion_type additive`.
+3. **Triển khai Feature-level & Model-level Ablation (Issue #5):**
+   - Xây dựng script `experiments/run_ablation.py` hỗ trợ các chế độ bóc tách đặc trưng người dùng: `no_profile`, `no_counts`, `no_ratios`, `source_only` và bóc tách kiến trúc: `no_gru`, `no_tree`.
+
+---
+
+## 7. CÁC LỆNH ĐIỀU HÀNH NHANH (QUICK COMMANDS)
 
 ```bash
 # Kiểm tra trạng thái Git
 git status
 
-# Xem kết quả Benchmark Baseline 3 vừa hoàn thành
-python -c "import json; d=json.load(open('results/ttt_baseline_results.json')); print('Baseline 3 Pooled F1:', d['pooled']['macro_f1'], '| Acc:', d['pooled']['accuracy'])"
+# Xem kết quả UC-TTT 5 sự kiện
+python -c "import json; d=json.load(open('results/ucttt/ucttt_gated_events5_results.json')); print('UC-TTT 5-Events Pooled F1:', d['pooled']['macro_f1'], '| Acc:', d['pooled']['accuracy'])"
 
-# Kiểm tra CUDA GPU
-python -c "import torch; print('CUDA Available:', torch.cuda.is_available(), '| Device:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'None')"
+# Xem kết quả UC-TTT 9 sự kiện
+python -c "import json; d=json.load(open('results/ucttt/ucttt_gated_events9_results.json')); print('UC-TTT 9-Events Pooled F1:', d['pooled']['macro_f1'], '| Acc:', d['pooled']['accuracy'])"
 ```
+

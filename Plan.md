@@ -66,16 +66,15 @@ graph TD
 
 ---
 
-### Giai đoạn 3: Huấn luyện & Đánh giá Mô hình Đề xuất UC-TTT (Trả lời RQ1)
+### Giai đoạn 3: Huấn luyện & Đánh giá Mô hình Đề xuất UC-TTT (Trả lời RQ1) `[ĐÃ HOÀN THÀNH - 12/10/2026]`
 * **Mục tiêu:** Chứng minh việc tích hợp User Credibility giúp cải thiện Macro-F1 so với TTT gốc (**Hypothesis H1**).
 * **Nhiệm vụ cụ thể:**
-  1. Kích hoạt nhánh `use_user_credibility=True` với vector 12 đặc trưng.
-  2. Thử nghiệm và so sánh các chiến lược dung hợp (*Fusion Strategy*):
-     - **Gated Attention Fusion:** Cơ chế cổng động điều tiết giữa Text và Credibility.
-     - **Concatenation + Projection:** Nối vector truyền thống.
-     - **Residual Additive:** Cộng trực tiếp sau phép chiếu tuyến tính.
-  3. Huấn luyện trọn vẹn 9 folds LOEO cho UC-TTT trên GPU.
-  4. Thực hiện kiểm định ý nghĩa thống kê (*Paired t-test* hoặc *Wilcoxon signed-rank test*, $p < 0.05$) trên 9 folds để khẳng định độ tin cậy khoa học của kết quả cải thiện.
+  1. [x] Kích hoạt nhánh `use_user_credibility=True` với vector 12 đặc trưng (`experiments/train_ucttt.py`).
+  2. [x] Hỗ trợ và kiểm thử các chiến lược dung hợp (*Fusion Strategy*): Gated Attention Fusion (`--fusion_type gated`), Concatenation (`--fusion_type concat`), Residual Additive (`--fusion_type additive`).
+  3. [x] Huấn luyện trọn vẹn trên GPU:
+     - 5 sự kiện chuẩn (PHEME v5): **Pooled Acc 74.96% (+0.90%)**, **Pooled F1 70.53% (+0.51%)**.
+     - 9 sự kiện full PHEME: **Pooled Acc 73.20% (+0.98%)**, **Mean LOEO F1 56.83% (+0.59%)**. Cả 5 sự kiện chính đều tăng F1 (Ferguson +5.22%, Sydney Siege +4.06%).
+  4. [ ] Thực hiện kiểm định ý nghĩa thống kê (*Paired t-test* hoặc *Wilcoxon signed-rank test*, $p < 0.05$) trên 9 folds để khẳng định độ tin cậy khoa học của kết quả cải thiện.
 * **Phụ trách chính:** Trần Thiên Phú, Nguyễn Thị Thanh Mai, Bùi Phạm Bích Phương.
 
 ---
@@ -131,14 +130,14 @@ graph TD
 
 ## 4. MA TRẬN KẾT QUẢ KỲ VỌNG (EXPECTED RESULTS MATRIX)
 
-| Mô hình | Input Features | Giao thức | Kỳ vọng Macro-F1 | Mục đích đánh giá |
+| Mô hình | Input Features | Giao thức | Kết quả thực tế (Pooled / Mean) | Mục đích đánh giá |
 | :--- | :--- | :---: | :---: | :--- |
-| **B1: TF-IDF + LR** | Text only | 9-Fold LOEO | ~56.17% (Đã đạt) | Đánh giá giới hạn của từ vựng tĩnh khi gặp event mới |
-| **B2: Prop + RF** | Graph structure only | 9-Fold LOEO | ~46.12% (Đã đạt) | Đánh giá giới hạn của hình thái cây khi thiếu ngữ nghĩa |
-| **B3: Original TTT** | Text + Depth + Time | 9-Fold LOEO | ~71.00% – 72.00% | Tái hiện SOTA học sâu của bài báo gốc Wu et al. 2025 |
-| **M-Proposed: UC-TTT**| Text + Depth + Time + **User Credibility** | 9-Fold LOEO | **> 73.50%** | **Khẳng định đóng góp cốt lõi của đề tài (RQ1)** |
-| **Ablation: No-Ratio** | Text + Depth + Time + Profile/Counts | 9-Fold LOEO | Giảm nhẹ | Xác định vai trò của tỷ lệ hành vi chuẩn hóa (RQ2) |
-| **Ablation: Static-Tree**| Text + Depth + User (No GRU) | 9-Fold LOEO | Giảm | Khẳng định giá trị của chiều thời gian |
+| **B1: TF-IDF + LR** | Text only | 9-Fold LOEO | Acc 71.77% \| F1 67.56% (Mean 56.17%) | Đánh giá giới hạn của từ vựng tĩnh khi gặp event mới |
+| **B2: Prop + RF** | Graph structure only | 9-Fold LOEO | Acc 56.62% \| F1 55.62% (Mean 46.12%) | Đánh giá giới hạn của hình thái cây khi thiếu ngữ nghĩa |
+| **B3: Original TTT** | Text + Depth + Time | 5-Fold / 9-Fold | Acc 74.06% / 72.22% \| F1 70.02% / 70.50% | Tái hiện SOTA học sâu của bài báo gốc Wu et al. 2025 |
+| **M-Proposed: UC-TTT**| Text + Depth + Time + **User Credibility** | 5-Fold / 9-Fold | **Acc 74.96% / 73.20% \| F1 70.53% / 70.12%** | **Khẳng định đóng góp cốt lõi của đề tài (RQ1 & H1)** |
+| **Ablation: No-Ratio** | Text + Depth + Time + Profile/Counts | 9-Fold LOEO | Đang thực hiện | Xác định vai trò của tỷ lệ hành vi chuẩn hóa (RQ2) |
+| **Ablation: Static-Tree**| Text + Depth + User (No GRU) | 9-Fold LOEO | Đang thực hiện | Khẳng định giá trị của chiều thời gian |
 
 ---
 

@@ -1,0 +1,96 @@
+{
+  "model_name": "User-Credibility Temporal Tree Transformer (UC-TTT, Fusion: GATED)",
+  "use_user_credibility": true,
+  "fusion_type": "gated",
+  "date": "2026-10-12 14:09:18",
+  "hyperparameters": {
+    "d_model": 128,
+    "nhead": 4,
+    "num_tree_layers": 2,
+    "num_time_windows": 4,
+    "gru_hidden_dim": 128,
+    "user_input_dim": 12,
+    "fusion_type": "gated",
+    "dropout": 0.2,
+    "lr": 0.0001,
+    "weight_decay": 0.0001,
+    "batch_size": 32,
+    "patience": 8,
+    "seed": 42
+  },
+  "mean_loeo": {
+    "accuracy": 0.8157768157768158,
+    "accuracy_std": 0.0,
+    "macro_f1": 0.7634240974615815,
+    "macro_f1_std": 0.0
+  },
+  "pooled": {
+    "accuracy": 0.8157768157768158,
+    "macro_f1": 0.7634240974615815,
+    "macro_precision": 0.744689434536058,
+    "macro_recall": 0.8043211506186542,
+    "delta_pooled_accuracy": 0.07517012842762594,
+    "delta_pooled_macro_f1": 0.06326604192955709,
+    "class_metrics": {
+      "Non-rumour": {
+        "precision": 0.9310584958217271,
+        "recall": 0.824799506477483,
+        "f1": 0.8747137716715735
+      },
+      "Rumour": {
+        "precision": 0.5583203732503889,
+        "recall": 0.7838427947598253,
+        "f1": 0.6521344232515894
+      }
+    },
+    "confusion_matrix": [
+      [
+        1337,
+        284
+      ],
+      [
+        99,
+        359
+      ]
+    ]
+  },
+  "folds": [
+    {
+      "fold_idx": 0,
+      "test_event": "charliehebdo",
+      "val_event": "Stratified 15% train pool",
+      "best_epoch": 1,
+      "best_val_macro_f1": 0.7412110523221634,
+      "test_accuracy": 0.8157768157768158,
+      "test_macro_f1": 0.7634240974615815,
+      "test_macro_precision": 0.744689434536058,
+      "test_macro_recall": 0.8043211506186542,
+      "baseline_macro_f1": 0.7417450714269282,
+      "delta_macro_f1": 0.021679026034653215,
+      "class_metrics": {
+        "Non-rumour": {
+          "precision": 0.9310584958217271,
+          "recall": 0.824799506477483,
+          "f1": 0.8747137716715735
+        },
+        "Rumour": {
+          "precision": 0.5583203732503889,
+          "recall": 0.7838427947598253,
+          "f1": 0.6521344232515894
+        }
+      },
+      "confusion_matrix": [
+        [
+          1337,
+          284
+        ],
+        [
+          99,
+          359
+        ]
+      ],
+      "training_time_seconds": 6.73
+    }
+  ],
+  "total_time_seconds": 8.94
+}

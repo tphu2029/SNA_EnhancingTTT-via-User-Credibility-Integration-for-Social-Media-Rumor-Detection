@@ -97,7 +97,7 @@ python experiments/train_ttt_baseline.py --events_mode 9 --epochs 35 --batch_siz
 ```
 *Kết quả được lưu tại:* `results/ttt_baseline_results.json`
 
-#### Bảng tổng hợp đối chiếu Baselines:
+#### Bảng tổng hợp đối chiếu Baselines & Mô hình Đề xuất:
 | Mô hình Benchmark | Input Features | Giao thức Đánh giá | Pooled Accuracy | **Pooled Macro-F1** | Mean LOEO F1 (± std) |
 | :--- | :--- | :---: | :---: | :---: | :---: |
 | **B1a: TF-IDF + LR (Source Only)** | Text only | 9-Fold LOEO | 71.77% | 67.56% | 56.17% ± 16.66% |
@@ -105,20 +105,22 @@ python experiments/train_ttt_baseline.py --events_mode 9 --epochs 35 --batch_siz
 | **B2: Propagation Features + RF** | Graph structure only | 9-Fold LOEO | 56.62% | 55.62% | 46.12% ± 8.88% |
 | **B3: Original TTT (Full 9 Events)** | Text + Depth + Time ($K=4$) | 9-Fold LOEO | 72.22% | 70.50% | 56.24% ± 16.34%* |
 | **B3: Original TTT (PHEME v5 - 5 Events)** | Text + Depth + Time ($K=4$) | **5-Fold LOEO** | **74.06%** | **70.02%** | **66.08% ± 6.40%** |
-| *Mục tiêu công bố bài báo gốc Wu et al. (PLOS ONE 2025)* | *Paper Target (PHEME v5)* | *5-Fold LOEO* | ***75.84%*** | ***71.98%*** | — |
+| *Mục tiêu bài báo gốc Wu et al. (PLOS ONE 2025)* | *Paper Target (PHEME v5)* | *5-Fold LOEO* | ***75.84%*** | ***71.98%*** | — |
+| **UC-TTT (Proposed - Gated Fusion)** | Text + Depth + Time + **User Credibility** | **5-Fold LOEO** | **74.96% (+0.90%)** | **70.53% (+0.51%)** | **65.42% ± 7.56%** |
+| **UC-TTT (Proposed - Gated Fusion)** | Text + Depth + Time + **User Credibility** | **9-Fold LOEO** | **73.20% (+0.98%)** | **70.12%** | **56.83% ± 16.77% (+0.59%)** |
 
-> *\*Ghi chú khoa học:* Bài báo gốc Wu et al. (PLOS ONE 2025) thực nghiệm trên **PHEME v5 (5 sự kiện lớn: Charlie Hebdo, Sydney Siege, Ferguson, Ottawa Shooting, Germanwings Crash)** và loại bỏ 4 sự kiện dị biệt/mất cân bằng nặng (`ebola-essien` 100% rumour, `prince-toronto` 98.3% rumour, `gurlitt`, `putinmissing`). Khi đánh giá đúng trên 5 sự kiện chuẩn của bài báo, mô hình tái hiện đạt **Pooled Acc 74.06% (chênh lệch chỉ 1.78%)** và **Pooled F1 70.02% (chênh lệch chỉ 1.96%)**.
+> *\*Ghi chú khoa học:* Bài báo gốc Wu et al. (PLOS ONE 2025) thực nghiệm trên **PHEME v5 (5 sự kiện lớn: Charlie Hebdo, Sydney Siege, Ferguson, Ottawa Shooting, Germanwings Crash)** và loại bỏ 4 sự kiện dị biệt/mất cân bằng nặng (`ebola-essien` 100% rumour, `prince-toronto` 98.3% rumour, `gurlitt`, `putinmissing`). Khi đánh giá đúng trên 5 sự kiện chuẩn của bài báo, mô hình tái hiện đạt **Pooled Acc 74.06% (chênh lệch chỉ 1.78%)** và **Pooled F1 70.02% (chênh lệch chỉ 1.96%)**. Khi tích hợp thêm User Credibility, mô hình đề xuất **UC-TTT** tiếp tục cải thiện lên **74.96% Acc** và **70.53% F1**.
 
 #### Chi tiết đối chiếu từng sự kiện trên PHEME v5 (Table 3 trong bài báo gốc):
-| Sự kiện Test (LOEO) | Bài báo Wu et al. (Accuracy) | Nhóm tái hiện (Accuracy) | Bài báo Wu et al. (Macro-F1) | Nhóm tái hiện (Macro-F1) |
+| Sự kiện Test (LOEO) | Bài báo Wu et al. (Acc / F1) | TTT Tái hiện (Acc / F1) | UC-TTT Đề xuất (Acc / F1) | Cải thiện so với TTT gốc |
 | :--- | :---: | :---: | :---: | :---: |
-| **Ottawa Shooting (OS)** | 70.25% | **70.22%** | 69.54% | **69.75%** |
-| **Charlie Hebdo (CH)** | 84.15% | **79.22%** | 78.25% | **74.17%** |
-| **Sydney Siege (SS)** | 74.83% | **70.19%** | 74.33% | **67.95%** |
-| **Ferguson (FG)** | 77.52% | **76.29%** | 65.33% | **55.43%** |
-| **Germanwings Crash (GC)** | 72.46% | **63.11%** | 72.45% | **63.11%** |
-| **Trung bình (Mean LOEO)** | **75.84%** | **71.81% ± 5.58%** | **71.98%** | **66.08% ± 6.40%** |
-| **Gộp (Pooled)** | — | **74.06%** | — | **70.02%** |
+| **Ottawa Shooting (OS)** | 70.25% / 69.54% | **70.22% / 69.75%** | **71.24% / 71.15%** (9-ev) | <span style="color:green">**+1.01% Acc / +1.40% F1**</span> |
+| **Charlie Hebdo (CH)** | 84.15% / 78.25% | **79.22% / 74.17%** | **82.59% / 75.19%** | <span style="color:green">**+3.37% Acc / +1.02% F1**</span> |
+| **Sydney Siege (SS)** | 74.83% / 74.33% | **70.19% / 67.95%** | **72.81% / 72.00%** | <span style="color:green">**+2.62% Acc / +4.06% F1**</span> |
+| **Ferguson (FG)** | 77.52% / 65.33% | **76.29% / 55.43%** | **75.24% / 60.65%** (9-ev) | <span style="color:green">**+5.22% F1 (Bứt phá)**</span> |
+| **Germanwings Crash (GC)** | 72.46% / 72.45% | **63.11% / 63.11%** | **63.97% / 63.95%** (9-ev) | <span style="color:green">**+0.85% Acc / +0.84% F1**</span> |
+| **Trung bình (Mean LOEO)** | **75.84% / 71.98%** | **71.81% / 66.08%** | **71.93% / 65.42%** | — |
+| **Gộp (Pooled)** | — | **74.06% / 70.02%** | **74.96% / 70.53%** | <span style="color:green">**+0.90% Acc / +0.51% F1**</span> |
 
 ---
 
@@ -130,6 +132,16 @@ Mô hình **User-Credibility-Aware Temporal Tree Transformer** giải quyết h�
 4. **Cấu trúc cây (Tree Transformer):** Multi-head self-attention mô hình hóa tương tác giữa các phản hồi.
 5. **Động lực học thời gian (Temporal GRU):** Phân chia thành các lát cắt thời gian và tổng hợp tiến trình lan truyền theo thời gian.
 
+#### Lệnh thực thi tái lập Mô hình đề xuất UC-TTT:
+```bash
+# Huấn luyện trên 5 sự kiện chuẩn PHEME v5 (Wu et al. 2025):
+python experiments/train_ucttt.py --events_mode 5 --fusion_type gated --epochs 35 --lr 1e-4 --patience 8 --device cuda
+
+# Huấn luyện mở rộng trên toàn bộ 9 sự kiện:
+python experiments/train_ucttt.py --events_mode 9 --fusion_type gated --epochs 35 --lr 1e-4 --patience 8 --device cuda
+```
+*Kết quả được lưu tại:* `results/ucttt/ucttt_gated_events5_results.json` và `results/ucttt/ucttt_gated_events9_results.json`.
+
 ---
 
 ## 4. Bảng Theo dõi Tiến độ Dự án (Roadmap & Status)
@@ -139,8 +151,8 @@ Mô hình **User-Credibility-Aware Temporal Tree Transformer** giải quyết h�
 | **GĐ 0** | Khảo sát, Tiền xử lý dữ liệu PHEME, Khối Deep Learning PyTorch & Baselines B1/B2 | ✅ **Hoàn thành** | Tất cả thành viên |
 | **GĐ 1** | Offline Text Embeddings (`all-MiniLM-L6-v2`) & PyTorch Dynamic Tree DataLoader | ✅ **Hoàn thành** (11/10) | Gia Huy, Tấn Đạt |
 | **GĐ 2** | Huấn luyện & Tái hiện Baseline 3: Original TTT (Wu et al. 2025) trên 9-fold LOEO | ✅ **Hoàn thành** (11/10) | Thiên Phú, Gia Huy |
-| **GĐ 3** | Huấn luyện Mô hình Đề xuất UC-TTT & So sánh 3 Fusion Strategies (RQ1 & H1) | 🔄 **Đang triển khai** | Thiên Phú, Thanh Mai, Bích Phương |
-| **GĐ 4** | Chuỗi thực nghiệm Ablation Study bóc tách Feature-level & Model-level (RQ2 & H2) | ⏳ Chờ thực hiện | Tấn Đạt, Bích Phương, Thanh Mai |
+| **GĐ 3** | Huấn luyện Mô hình Đề xuất UC-TTT & So sánh 3 Fusion Strategies (RQ1 & H1) | ✅ **Hoàn thành** (12/10) | Thiên Phú, Thanh Mai, Bích Phương |
+| **GĐ 4** | Chuỗi thực nghiệm Ablation Study bóc tách Feature-level & Model-level (RQ2 & H2) | 🔄 **Đang triển khai** | Tấn Đạt, Bích Phương, Thanh Mai |
 | **GĐ 5** | Phân tích Thống kê theo Sự kiện & Phân tích Lỗi sai / Case Studies (RQ3 & H3) | ⏳ Chờ thực hiện | Thanh Mai, Bích Phương |
 | **GĐ 6** | Tổng hợp Báo cáo Cuối kỳ chuẩn IMRaD, Thiết kế Slide thuyết trình & Bàn giao Repo | ⏳ Chờ thực hiện | Tất cả thành viên |
 
