@@ -88,9 +88,15 @@ def parse_args():
     parser.add_argument(
         "--fusion_type",
         type=str,
-        choices=["gated", "concat", "additive", "residual"],
+        choices=["residual_gate", "gated", "concat", "additive", "residual"],
         default="gated",
-        help="Chiến lược dung hợp đặc trưng uy tín: 'gated' (đề xuất chính), 'concat', 'additive'/'residual'",
+        help="Chiến lược dung hợp đặc trưng uy tín: 'gated' (chuẩn bài báo), 'residual_gate', 'concat', 'additive'",
+    )
+    parser.add_argument(
+        "--use_root_user_shortcut",
+        action="store_true",
+        default=False,
+        help="Nối trực tiếp biểu diễn Root User vào Classifier Head (tắt mặc định để tránh overfitting)",
     )
     parser.add_argument(
         "--val_strategy",
@@ -102,14 +108,15 @@ def parse_args():
     parser.add_argument("--val_ratio", type=float, default=0.15)
     parser.add_argument("--epochs", type=int, default=35)
     parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--lr", type=float, default=1e-4)
+    parser.add_argument("--lr", type=float, default=4.2e-5)
     parser.add_argument("--weight_decay", type=float, default=1e-4)
     parser.add_argument("--dropout", type=float, default=0.2)
-    parser.add_argument("--d_model", type=int, default=128)
-    parser.add_argument("--nhead", type=int, default=4)
-    parser.add_argument("--num_tree_layers", type=int, default=2)
-    parser.add_argument("--num_time_windows", type=int, default=4)
+    parser.add_argument("--d_model", type=int, default=768)
+    parser.add_argument("--nhead", type=int, default=12)
+    parser.add_argument("--num_tree_layers", type=int, default=6)
+    parser.add_argument("--num_time_windows", type=int, default=8)
     parser.add_argument("--gru_hidden_dim", type=int, default=128)
+    parser.add_argument("--fc_hidden_dim", type=int, default=600)
     parser.add_argument("--user_input_dim", type=int, default=12)
     parser.add_argument("--patience", type=int, default=8)
     parser.add_argument("--seed", type=int, default=42)
@@ -220,9 +227,9 @@ def main():
 
         print(f"    Threads count: Train={len(train_threads)}, Val={len(val_threads)}, Test={len(test_threads)}")
 
-        train_ds = PHEMETreeDataset(train_threads, embeddings)
-        val_ds = PHEMETreeDataset(val_threads, embeddings)
-        test_ds = PHEMETreeDataset(test_threads, embeddings)
+        train_ds = PHEMETreeDataset(train_threads, embeddings, num_windows=args.num_time_windows)
+        val_ds = PHEMETreeDataset(val_threads, embeddings, num_windows=args.num_time_windows)
+        test_ds = PHEMETreeDataset(test_threads, embeddings, num_windows=args.num_time_windows)
 
         train_loader = DataLoader(
             train_ds, batch_size=args.batch_size, shuffle=True,
@@ -252,9 +259,11 @@ def main():
             num_tree_layers=args.num_tree_layers,
             num_time_windows=args.num_time_windows,
             gru_hidden_dim=args.gru_hidden_dim,
+            fc_hidden_dim=args.fc_hidden_dim,
             num_classes=2,
             use_user_credibility=True,
             fusion_type=fusion_key,
+            use_root_user_shortcut=args.use_root_user_shortcut,
             dropout=args.dropout,
         ).to(device)
 
