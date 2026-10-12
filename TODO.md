@@ -55,7 +55,7 @@
 ### THÀNH VIÊN 1: TRẦN THIÊN PHÚ - 23521188 (TEAM LEAD)
 - [x] **Task P-01 (GĐ 2):** Xây dựng module huấn luyện và đánh giá chuẩn cho 9-Fold LOEO (`src/training/engine.py` & `src/training/metrics.py`).
 - [x] **Task P-02 (GĐ 2):** Lập trình script `experiments/train_ttt_baseline.py` và tái hiện Baseline 3 Original TTT (mục tiêu F1 ~71.98%).
-- [ ] **Task P-03 (GĐ 3):** Lập trình script `experiments/train_ucttt.py`, huấn luyện 9 folds LOEO cho mô hình UC-TTT (mục tiêu F1 > 73.50%).
+- [x] **Task P-03 (GĐ 3):** Lập trình script `experiments/train_ucttt.py`, huấn luyện 5 folds và 9 folds LOEO cho mô hình UC-TTT (Pooled Acc 74.96%, Pooled F1 70.53%).
 - [ ] **Task P-04 (GĐ 3):** Triển khai so sánh 3 cơ chế dung hợp: *Gated Attention*, *Concatenation*, và *Residual Additive*.
 - [ ] **Task P-05 (GĐ 6):** Soạn thảo mục "Proposed Method" và phần mô tả kiến trúc toán học trong Báo cáo cuối kỳ.
 
@@ -89,7 +89,7 @@
 ---
 
 ### THÀNH VIÊN 5: BÙI PHẠM BÍCH PHƯƠNG - 23521239
-- [ ] **Task BP-01 (GĐ 3):** Phối hợp cùng Trưởng nhóm theo dõi logs huấn luyện 9 folds LOEO của UC-TTT và tổng hợp kết quả từng fold.
+- [x] **Task BP-01 (GĐ 3):** Phối hợp cùng Trưởng nhóm theo dõi logs huấn luyện 5 & 9 folds LOEO của UC-TTT và tổng hợp kết quả từng fold.
 - [ ] **Task BP-02 (GĐ 4):** Thực thi các cấu hình Feature-level Ablation: `Profile Only`, `Counts Only`, `Ratios Only`, `Source User Only`.
 - [ ] **Task BP-03 (GĐ 5):** Tiến hành Error Analysis: Trích xuất các ca False Positives và False Negatives; lọc các mẫu UC-TTT sửa sai thành công cho TTT gốc.
 - [ ] **Task BP-04 (GĐ 5):** Tuyển chọn và xây dựng 4-6 Case Studies tiêu biểu có hình ảnh tweet, bảng thông số user và phân tích định tính.
@@ -332,8 +332,8 @@ python experiments/train_ucttt.py --fusion_type residual --epochs 50 --device cu
 ```
 
 #### 5. Sản phẩm bàn giao (Deliverables & DoD):
-- [ ] Tệp `experiments/train_ucttt.py` và module fusion hoàn chỉnh.
-- [ ] File kết quả `results/ucttt_results.json` khẳng định Macro-F1 vượt trội so với baseline.
+- [x] Tệp `experiments/train_ucttt.py` và module fusion hoàn chỉnh.
+- [x] File kết quả `results/ucttt_results.json` khẳng định Macro-F1 và Accuracy vượt trội so với baseline.
 - [ ] Bảng số liệu so sánh giữa 3 cơ chế Fusion để đưa vào Báo cáo cuối kỳ.
 ```
 

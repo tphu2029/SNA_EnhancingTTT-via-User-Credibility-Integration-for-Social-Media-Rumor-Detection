@@ -59,7 +59,7 @@ class UserCredibilityEncoder(nn.Module):
             combined = torch.cat([text_repr, u_emb], dim=-1)
             return self.proj(combined)
             
-        elif self.fusion_type == "additive":
+        elif self.fusion_type in ("additive", "residual"):
             return text_repr + u_emb
             
         return u_emb
