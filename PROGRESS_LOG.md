@@ -167,3 +167,55 @@ python -c "import json; d=json.load(open('results/ucttt/ucttt_gated_events5_resu
 python -c "import json; d=json.load(open('results/ucttt/ucttt_gated_events9_results.json')); print('UC-TTT 9-Events Pooled F1:', d['pooled']['macro_f1'], '| Acc:', d['pooled']['accuracy'])"
 ```
 
+
+---
+
+## 8. CHECKPOINT NGÀY 12/10/2026: CHẠY LẠI TTT VÀ UC-TTT THEO CẤU HÌNH BÀI BÁO (COLAB T4)
+
+### 8.1. Đã làm
+- Chạy lại hai mô hình trên Google Colab (GPU Tesla T4), 5 sự kiện PHEME v5, LOEO 5 fold, **cùng cấu hình và cùng seed 42**:
+  1. UC-TTT (`train_ucttt.py --fusion_type gated`), tổng thời gian ~61.1 phút.
+  2. TTT baseline (`train_ttt_baseline.py`, tắt User Credibility), tổng thời gian ~52.4 phút.
+- Cấu hình chung (theo mục Experimental setup của bài báo Wu et al. 2025): `d_model=768`, `nhead=12`, `num_tree_layers=6`, `fc_hidden_dim=600`, `lr=4.2e-5`, `dropout=0.2`; ngoài ra `epochs=35`, `patience=8`, `batch_size=32`, `weight_decay=1e-4`, `gru_hidden_dim=128`, `num_time_windows=8`.
+- File kết quả: `results/paper_config/ttt_baseline_results.json`, `results/paper_config/ucttt_gated_events5_results.json`; bảng đầy đủ: `results/paper_config/comparison_table.md`.
+
+### 8.2. Kết quả
+### Bảng 1. Tổng hợp (5 sự kiện PHEME v5, LOEO, seed 42)
+
+| Chỉ số | Bài báo | TTT (chạy lại) | UC-TTT (chạy lại) | UC-TTT − TTT |
+| :--- | :---: | :---: | :---: | :---: |
+| Mean LOEO Accuracy | 75.84% | 70.92% ± 7.77 | 69.96% ± 8.78 | -0.97 |
+| Mean LOEO Macro-F1 | 71.98% | 63.66% ± 9.14 | 62.02% ± 9.89 | -1.64 |
+| Pooled Accuracy | — | 74.15% | 73.53% | -0.62 |
+| Pooled Macro-F1 | — | 69.06% | 67.96% | -1.10 |
+| Rumour Precision (pooled) | — | 65.97% | 65.44% | -0.53 |
+| Rumour Recall (pooled) | — | 49.44% | 46.86% | -2.59 |
+| Rumour F1 (pooled) | — | 56.52% | 54.61% | -1.91 |
+
+### Bảng 2. Chi tiết từng sự kiện (Acc / Macro-F1, %)
+
+| Sự kiện test | Bài báo | TTT (chạy lại) | UC-TTT (chạy lại) | Δ F1 (UC − TTT) |
+| :--- | :---: | :---: | :---: | :---: |
+| charliehebdo | 84.15 / 78.25 | 81.96 / 75.16 | 83.07 / 75.88 | +0.72 |
+| ferguson | 77.52 / 65.33 | 75.33 / 50.06 | 74.98 / 48.04 | -2.03 |
+| germanwings-crash | 72.46 / 72.45 | 62.05 / 62.00 | 61.62 / 61.09 | -0.91 |
+| ottawashooting | 70.25 / 69.54 | 62.13 / 58.81 | 59.10 / 55.47 | -3.33 |
+| sydneysiege | 74.83 / 74.33 | 73.14 / 72.28 | 71.01 / 69.62 | -2.66 |
+
+*Số của bài báo: Mean LOEO (trung bình các sự kiện). Bài báo không báo cáo Pooled.*
+
+### 8.3. Nhận xét
+- Ở lần chạy này UC-TTT **không vượt** TTT: thấp hơn 0.96 điểm Mean LOEO Acc và 1.64 điểm Mean LOEO Macro-F1; chỉ cao hơn ở sự kiện charliehebdo (+0.72 F1), thấp hơn ở 4 sự kiện còn lại.
+- Chênh lệch giữa hai mô hình (~1 điểm) nhỏ hơn nhiều so với độ lệch chuẩn giữa các fold (~9 điểm) và so với nhiễu giữa các lần chạy (ví dụ fold ottawashooting của TTT: F1 69.75% ở lần chạy trước, 58.81% ở lần này). Do đó **một lần chạy (một seed) chưa đủ để kết luận** về lợi ích của User Credibility; cần chạy thêm nhiều seed.
+- So với bài báo (Mean LOEO 75.84% Acc / 71.98% F1), TTT chạy lại thấp hơn 4.92 điểm Acc và 8.32 điểm F1, chủ yếu ở các fold germanwings-crash, ottawashooting và ferguson. Lưu ý: bài báo báo cáo trung bình theo sự kiện (Mean LOEO), nên so sánh đúng loại là với Mean LOEO, không phải Pooled.
+- Fold ferguson: cả hai mô hình gần như không nhận ra tin đồn (Rumour recall của TTT ở fold này chỉ ~8.5%), kéo Mean LOEO F1 xuống.
+
+### 8.4. Điểm khác biệt so với bài báo (cần ghi rõ khi báo cáo)
+- Biểu diễn văn bản dùng embedding cố định MiniLM-L6-v2 (384 chiều, trích xuất offline) thay cho BERT tokenizer và token-level Transformer của bài báo.
+- Chia thời gian thành 8 cửa sổ cố định (`num_time_windows=8`), trong khi bài báo dùng k=8 bài đăng cho mỗi cửa sổ (số cửa sổ thay đổi theo thread).
+- Repo không có lựa chọn Top-down / Bottom-up như bài báo.
+- Chạy trên Tesla T4 (Colab), kết quả có thể lệch nhẹ so với các lần chạy trước đó trên RTX 3050.
+
+### 8.5. Việc tiếp theo
+- Chạy thêm các seed khác (ví dụ 43, 44) cho cả hai mô hình, báo cáo trung bình ± độ lệch chuẩn qua các seed.
+- Tiếp tục Giai đoạn 4 (Ablation, kiểm định thống kê).
