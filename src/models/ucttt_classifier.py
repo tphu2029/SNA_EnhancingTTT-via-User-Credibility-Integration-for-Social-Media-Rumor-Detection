@@ -31,24 +31,28 @@ class UserCredibilityTemporalTreeTransformer(nn.Module):
     """
     def __init__(
         self,
-        text_input_dim: int = 128,          # Chiều vector text (hoặc GloVe/Sentence embedding)
+        text_input_dim: int = 384,          # Chiều vector text đầu vào (MiniLM 384 hoặc BERT 768)
         user_input_dim: int = 12,           # Chiều đặc trưng User Credibility
-        d_model: int = 128,                 # Chiều không gian ẩn chung
-        nhead: int = 4,                     # Số attention heads
-        num_tree_layers: int = 2,           # Số lớp Tree Transformer
-        num_time_windows: int = 4,          # Số lát cắt thời gian (Time windows)
-        gru_hidden_dim: int = 128,          # Chiều ẩn Temporal GRU
+        d_model: int = 768,                 # Chiều không gian ẩn (Wu et al. 2025: 768)
+        nhead: int = 12,                    # Số attention heads (Wu et al. 2025: 12 heads)
+        num_tree_layers: int = 6,           # Số lớp Tree Transformer (Wu et al. 2025: 6 layers)
+        dim_feedforward: Optional[int] = None, # Chiều feedforward Transformer (mặc định 2048)
+        num_time_windows: int = 8,          # Số lát cắt thời gian (Wu et al. 2025: 8 windows)
+        gru_hidden_dim: int = 128,          # Chiều ẩn Temporal GRU (Wu et al. 2025: 128)
+        fc_hidden_dim: int = 600,           # Chiều ẩn FC Classifier (Wu et al. 2025: 600)
         num_classes: int = 2,               # Rumour vs Non-rumour
         use_user_credibility: bool = True,  # Công tắc bật/tắt User Credibility (cho Baseline TTT gốc)
-        fusion_type: str = "gated",         # 'gated', 'concat', 'additive'
+        fusion_type: str = "gated",         # 'gated', 'residual_gate', 'concat', 'additive'
+        use_root_user_shortcut: bool = False,# Tắt root user shortcut để tránh overfitting out-of-domain
         dropout: float = 0.2,
     ):
         super().__init__()
         self.use_user_credibility = use_user_credibility
+        self.use_root_user_shortcut = use_root_user_shortcut
         self.num_time_windows = num_time_windows
         self.d_model = d_model
         
-        # 1. Text Projection
+        # 1. Text Projection (chiếu text đầu vào lên d_model)
         self.text_proj = nn.Sequential(
             nn.Linear(text_input_dim, d_model),
             nn.LayerNorm(d_model),
@@ -63,22 +67,23 @@ class UserCredibilityTemporalTreeTransformer(nn.Module):
         if self.use_user_credibility:
             self.user_encoder = UserCredibilityEncoder(
                 input_dim=user_input_dim,
-                hidden_dim=64,
+                hidden_dim=128,
                 output_dim=d_model,
                 dropout=dropout,
                 fusion_type=fusion_type,
             )
             
-        # 4. Tree Transformer
+        # 4. Tree Transformer (6 layers, 12 heads, dim_feedforward=2048 theo Wu et al. 2025)
+        ff_dim = dim_feedforward if dim_feedforward is not None else min(d_model * 4, 2048)
         self.tree_transformer = TreeTransformer(
             num_layers=num_tree_layers,
             d_model=d_model,
             nhead=nhead,
-            dim_feedforward=d_model * 2,
+            dim_feedforward=ff_dim,
             dropout=dropout,
         )
         
-        # 5. Temporal GRU
+        # 5. Temporal GRU (Bidirectional GRU)
         self.temporal_gru = TemporalGRU(
             input_dim=d_model,
             hidden_dim=gru_hidden_dim,
@@ -87,13 +92,17 @@ class UserCredibilityTemporalTreeTransformer(nn.Module):
             dropout=dropout,
         )
         
-        # 6. Classifier Head
+        # 6. Classifier Head (FC dimension 600 theo Wu et al. 2025)
+        classifier_in_dim = gru_hidden_dim + d_model
+        if self.use_user_credibility and self.use_root_user_shortcut:
+            classifier_in_dim += d_model
+            
         self.classifier = nn.Sequential(
-            nn.Linear(gru_hidden_dim + d_model, 64),
-            nn.LayerNorm(64),
+            nn.Linear(classifier_in_dim, fc_hidden_dim),
+            nn.LayerNorm(fc_hidden_dim),
             nn.GELU(),
             nn.Dropout(dropout),
-            nn.Linear(64, num_classes),
+            nn.Linear(fc_hidden_dim, num_classes),
         )
 
     def forward(
@@ -115,7 +124,11 @@ class UserCredibilityTemporalTreeTransformer(nn.Module):
         h_node = h_text + h_depth
         
         # 3. Tích hợp User Credibility nếu được kích hoạt
+        root_user_emb = None
         if self.use_user_credibility and user_features is not None:
+            # Biểu diễn của root user (node index 0)
+            u_all = self.user_encoder.encode_user(user_features)
+            root_user_emb = u_all[:, 0, :]
             h_node = self.user_encoder(user_features, text_repr=h_node)
             
         # 4. Đi qua Tree Transformer
@@ -150,7 +163,11 @@ class UserCredibilityTemporalTreeTransformer(nn.Module):
         # Temporal aggregation
         h_temporal = self.temporal_gru(seq_windows)
         
-        # 6. Ghép root representation + temporal representation -> phân loại
-        fused_graph = torch.cat([root_repr, h_temporal], dim=-1)
+        # 6. Ghép root representation + temporal representation + root user shortcut -> phân loại
+        features_to_cat = [root_repr, h_temporal]
+        if self.use_user_credibility and self.use_root_user_shortcut and root_user_emb is not None:
+            features_to_cat.append(root_user_emb)
+            
+        fused_graph = torch.cat(features_to_cat, dim=-1)
         logits = self.classifier(fused_graph)
         return logits
