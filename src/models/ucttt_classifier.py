@@ -110,9 +110,10 @@ class UserCredibilityTemporalTreeTransformer(nn.Module):
         text_features: torch.Tensor,                # [B, N, text_input_dim]
         depths: torch.Tensor,                       # [B, N]
         user_features: Optional[torch.Tensor] = None, # [B, N, user_input_dim]
-        time_window_assignments: Optional[torch.Tensor] = None, # [B, N] (0 to num_time_windows - 1)
+        time_window_assignments: Optional[torch.Tensor] = None, # [B, N] (window index)
         adj_mask: Optional[torch.Tensor] = None,    # [B, N, N]
         node_padding_mask: Optional[torch.Tensor] = None, # [B, N] (True là padding)
+        num_windows: Optional[torch.Tensor] = None, # [B] số cửa sổ thực tế của từng thread
     ) -> torch.Tensor:
         batch_size, num_nodes, _ = text_features.shape
         
@@ -145,10 +146,23 @@ class UserCredibilityTemporalTreeTransformer(nn.Module):
         # 5. Phân bổ các node vào các time windows và Temporal GRU
         if time_window_assignments is None:
             # Mặc định chia đều theo index nếu không truyền time assignment
-            time_window_assignments = (torch.arange(num_nodes, device=text_features.device) * self.num_time_windows // num_nodes).repeat(batch_size, 1)
+            num_w = self.num_time_windows
+            time_window_assignments = (torch.arange(num_nodes, device=text_features.device) * num_w // num_nodes).repeat(batch_size, 1)
+            total_windows = num_w
+            if num_windows is None:
+                num_windows = torch.full((batch_size,), num_w, device=text_features.device, dtype=torch.long)
+        else:
+            if num_windows is None:
+                if node_padding_mask is not None:
+                    valid_tw = time_window_assignments.masked_fill(node_padding_mask, 0)
+                else:
+                    valid_tw = time_window_assignments
+                num_windows = valid_tw.max(dim=1).values + 1
+            total_windows = int(time_window_assignments.max().item()) + 1
+            total_windows = max(total_windows, 1)
 
         window_embeddings = []
-        for w in range(self.num_time_windows):
+        for w in range(total_windows):
             mask_w = (time_window_assignments == w).unsqueeze(-1).float()
             if node_padding_mask is not None:
                 mask_w = mask_w * (~node_padding_mask).unsqueeze(-1).float()
@@ -157,11 +171,11 @@ class UserCredibilityTemporalTreeTransformer(nn.Module):
             pooled_w = (h_tree * mask_w).sum(dim=1) / denom
             window_embeddings.append(pooled_w)
 
-        # [B, num_time_windows, d_model]
+        # [B, total_windows, d_model]
         seq_windows = torch.stack(window_embeddings, dim=1)
         
         # Temporal aggregation
-        h_temporal = self.temporal_gru(seq_windows)
+        h_temporal = self.temporal_gru(seq_windows, lengths=num_windows)
         
         # 6. Ghép root representation + temporal representation + root user shortcut -> phân loại
         features_to_cat = [root_repr, h_temporal]
