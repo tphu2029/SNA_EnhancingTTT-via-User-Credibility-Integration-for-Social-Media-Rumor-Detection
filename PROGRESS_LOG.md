@@ -205,7 +205,7 @@ python -c "import json; d=json.load(open('results/ucttt/ucttt_gated_events9_resu
 *Số của bài báo: Mean LOEO (trung bình các sự kiện). Bài báo không báo cáo Pooled.*
 
 ### 8.3. Nhận xét
-- Ở lần chạy này UC-TTT **không vượt** TTT: thấp hơn 0.96 điểm Mean LOEO Acc và 1.64 điểm Mean LOEO Macro-F1; chỉ cao hơn ở sự kiện charliehebdo (+0.72 F1), thấp hơn ở 4 sự kiện còn lại.
+- Ở lần chạy này UC-TTT **không vượt** TTT: thấp hơn 0.97 điểm Mean LOEO Acc và 1.64 điểm Mean LOEO Macro-F1; chỉ cao hơn ở sự kiện charliehebdo (+0.72 F1), thấp hơn ở 4 sự kiện còn lại.
 - Chênh lệch giữa hai mô hình (~1 điểm) nhỏ hơn nhiều so với độ lệch chuẩn giữa các fold (~9 điểm) và so với nhiễu giữa các lần chạy (ví dụ fold ottawashooting của TTT: F1 69.75% ở lần chạy trước, 58.81% ở lần này). Do đó **một lần chạy (một seed) chưa đủ để kết luận** về lợi ích của User Credibility; cần chạy thêm nhiều seed.
 - So với bài báo (Mean LOEO 75.84% Acc / 71.98% F1), TTT chạy lại thấp hơn 4.92 điểm Acc và 8.32 điểm F1, chủ yếu ở các fold germanwings-crash, ottawashooting và ferguson. Lưu ý: bài báo báo cáo trung bình theo sự kiện (Mean LOEO), nên so sánh đúng loại là với Mean LOEO, không phải Pooled.
 - Fold ferguson: cả hai mô hình gần như không nhận ra tin đồn (Rumour recall của TTT ở fold này chỉ ~8.5%), kéo Mean LOEO F1 xuống.
