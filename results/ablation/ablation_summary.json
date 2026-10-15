@@ -1,0 +1,150 @@
+{
+  "title": "Ablation Studies Summary (RQ2 & Hypothesis H2 - Social Media Rumor Detection)",
+  "protocol": "Leave-One-Event-Out (LOEO) Cross-Validation",
+  "last_updated": "2026-10-15 14:16:13",
+  "baseline_full": {
+    "variant_key": "full",
+    "display_name": "UC-TTT (Full)",
+    "category": "baseline",
+    "mean_loeo": {
+      "accuracy": 0.696007633145944,
+      "accuracy_std": 0.07330515790854039,
+      "macro_f1": 0.6262591939177127,
+      "macro_f1_std": 0.07761967128550723
+    },
+    "pooled": {
+      "accuracy": 0.7235436056532231,
+      "macro_f1": 0.6799176200617436,
+      "macro_precision": 0.6897721800717467,
+      "macro_recall": 0.6744872073255339,
+      "delta_pooled_accuracy": -0.01706308169596682,
+      "delta_pooled_macro_f1": -0.02024043547028076,
+      "class_metrics": {
+        "Non-rumour": {
+          "precision": 0.7705396208070004,
+          "recall": 0.8276762402088773,
+          "f1": 0.7980866062437059
+        },
+        "Rumour": {
+          "precision": 0.6090047393364929,
+          "recall": 0.5212981744421906,
+          "f1": 0.5617486338797814
+        }
+      },
+      "confusion_matrix": [
+        [
+          3170,
+          660
+        ],
+        [
+          944,
+          1028
+        ]
+      ]
+    },
+    "delta_mean_loeo_accuracy": 0.0,
+    "delta_mean_loeo_macro_f1": 0.0,
+    "delta_pooled_accuracy": 0.0,
+    "delta_pooled_macro_f1": 0.0
+  },
+  "variants": {
+    "without_ratios": {
+      "variant_key": "without_ratios",
+      "display_name": "w/o Derived Ratios",
+      "category": "feature",
+      "description": "Loại bỏ nhóm Derived Ratios (reputation ratio, status rate, favourite rate; còn 9 đặc trưng)",
+      "feature_group": "no_ratios",
+      "user_input_dim": 9,
+      "model_component": "full",
+      "events_mode": "5",
+      "num_folds": 1,
+      "mean_loeo": {
+        "accuracy": 0.8133718133718134,
+        "accuracy_std": 0.0,
+        "macro_f1": 0.7380163013118477,
+        "macro_f1_std": 0.0
+      },
+      "pooled": {
+        "accuracy": 0.8133718133718134,
+        "macro_f1": 0.7380163013118477,
+        "macro_precision": 0.7305481080184637,
+        "macro_recall": 0.747168037412886,
+        "class_metrics": {
+          "Non-rumour": {
+            "precision": 0.8919262555626192,
+            "recall": 0.865515114127082,
+            "f1": 0.878522229179712
+          },
+          "Rumour": {
+            "precision": 0.5691699604743083,
+            "recall": 0.62882096069869,
+            "f1": 0.5975103734439835
+          }
+        }
+      },
+      "folds": [
+        {
+          "fold_idx": 0,
+          "test_event": "charliehebdo",
+          "accuracy": 0.8133718133718134,
+          "macro_f1": 0.7380163013118477,
+          "rumour_precision": 0.5691699604743083,
+          "rumour_recall": 0.62882096069869,
+          "rumour_f1": 0.5975103734439835,
+          "non_rumour_f1": 0.878522229179712
+        }
+      ],
+      "elapsed_seconds": 116.9,
+      "timestamp": "2026-10-15 14:16:13",
+      "delta_mean_loeo_accuracy": 11.74,
+      "delta_mean_loeo_macro_f1": 11.18,
+      "delta_pooled_accuracy": 8.98,
+      "delta_pooled_macro_f1": 5.81
+    },
+    "full": {
+      "variant_key": "full",
+      "display_name": "UC-TTT (Full)",
+      "category": "baseline",
+      "mean_loeo": {
+        "accuracy": 0.696007633145944,
+        "accuracy_std": 0.07330515790854039,
+        "macro_f1": 0.6262591939177127,
+        "macro_f1_std": 0.07761967128550723
+      },
+      "pooled": {
+        "accuracy": 0.7235436056532231,
+        "macro_f1": 0.6799176200617436,
+        "macro_precision": 0.6897721800717467,
+        "macro_recall": 0.6744872073255339,
+        "delta_pooled_accuracy": -0.01706308169596682,
+        "delta_pooled_macro_f1": -0.02024043547028076,
+        "class_metrics": {
+          "Non-rumour": {
+            "precision": 0.7705396208070004,
+            "recall": 0.8276762402088773,
+            "f1": 0.7980866062437059
+          },
+          "Rumour": {
+            "precision": 0.6090047393364929,
+            "recall": 0.5212981744421906,
+            "f1": 0.5617486338797814
+          }
+        },
+        "confusion_matrix": [
+          [
+            3170,
+            660
+          ],
+          [
+            944,
+            1028
+          ]
+        ]
+      },
+      "delta_mean_loeo_accuracy": 0.0,
+      "delta_mean_loeo_macro_f1": 0.0,
+      "delta_pooled_accuracy": 0.0,
+      "delta_pooled_macro_f1": 0.0
+    }
+  }
+}

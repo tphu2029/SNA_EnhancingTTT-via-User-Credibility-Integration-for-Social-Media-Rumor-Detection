@@ -1,0 +1,49 @@
+{
+  "variant_key": "without_ratios",
+  "display_name": "w/o Derived Ratios",
+  "category": "feature",
+  "description": "Loại bỏ nhóm Derived Ratios (reputation ratio, status rate, favourite rate; còn 9 đặc trưng)",
+  "feature_group": "no_ratios",
+  "user_input_dim": 9,
+  "model_component": "full",
+  "events_mode": "5",
+  "num_folds": 1,
+  "mean_loeo": {
+    "accuracy": 0.8133718133718134,
+    "accuracy_std": 0.0,
+    "macro_f1": 0.7380163013118477,
+    "macro_f1_std": 0.0
+  },
+  "pooled": {
+    "accuracy": 0.8133718133718134,
+    "macro_f1": 0.7380163013118477,
+    "macro_precision": 0.7305481080184637,
+    "macro_recall": 0.747168037412886,
+    "class_metrics": {
+      "Non-rumour": {
+        "precision": 0.8919262555626192,
+        "recall": 0.865515114127082,
+        "f1": 0.878522229179712
+      },
+      "Rumour": {
+        "precision": 0.5691699604743083,
+        "recall": 0.62882096069869,
+        "f1": 0.5975103734439835
+      }
+    }
+  },
+  "folds": [
+    {
+      "fold_idx": 0,
+      "test_event": "charliehebdo",
+      "accuracy": 0.8133718133718134,
+      "macro_f1": 0.7380163013118477,
+      "rumour_precision": 0.5691699604743083,
+      "rumour_recall": 0.62882096069869,
+      "rumour_f1": 0.5975103734439835,
+      "non_rumour_f1": 0.878522229179712
+    }
+  ],
+  "elapsed_seconds": 116.9,
+  "timestamp": "2026-10-15 14:16:13"
+}

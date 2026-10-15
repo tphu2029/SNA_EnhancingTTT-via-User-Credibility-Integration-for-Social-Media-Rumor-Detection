@@ -115,34 +115,77 @@ class UserCredibilityExtractor:
 
         return np.array(features, dtype=np.float32)
 
-    def select_feature_group(self, feature_vector: np.ndarray, mode: str = "all") -> np.ndarray:
+    @classmethod
+    def normalize_mode(cls, mode: str) -> str:
+        m = mode.lower().replace("-", "_")
+        if m in ("all", "full", "none", "full_features", "uc_ttt", "uc_ttt_full"):
+            return "all"
+        if m in ("without_profile", "w/o_profile", "no_profile"):
+            return "no_profile"
+        if m in ("without_counts", "w/o_counts", "no_counts"):
+            return "no_counts"
+        if m in ("without_ratios", "w/o_ratios", "no_ratios"):
+            return "no_ratios"
+        if m in ("profile_only", "profile"):
+            return "profile_only"
+        if m in ("counts_only", "counts"):
+            return "counts_only"
+        if m in ("ratios_only", "ratios"):
+            return "ratios_only"
+        if m in ("source_only", "source_user_only", "root_only"):
+            return "source_only"
+        return m
+
+    @classmethod
+    def get_feature_dim(cls, mode: str = "all") -> int:
+        norm_mode = cls.normalize_mode(mode)
+        if norm_mode in ("all", "source_only"):
+            return len(cls.FEATURE_NAMES)
+        elif norm_mode == "no_profile":
+            return len(cls.GROUP_INDICES["counts"]) + len(cls.GROUP_INDICES["ratios"])
+        elif norm_mode == "no_counts":
+            return len(cls.GROUP_INDICES["profile"]) + len(cls.GROUP_INDICES["ratios"])
+        elif norm_mode == "no_ratios":
+            return len(cls.GROUP_INDICES["profile"]) + len(cls.GROUP_INDICES["counts"])
+        elif norm_mode == "profile_only":
+            return len(cls.GROUP_INDICES["profile"])
+        elif norm_mode == "counts_only":
+            return len(cls.GROUP_INDICES["counts"])
+        elif norm_mode == "ratios_only":
+            return len(cls.GROUP_INDICES["ratios"])
+        else:
+            raise ValueError(f"Unknown mode: {mode}")
+
+    def select_feature_group(self, feature_vector, mode: str = "all"):
         """
         Lọc các nhóm feature phục vụ cho Ablation Studies.
         mode:
-          - 'all': đầy đủ 12 features
-          - 'no_profile': loại bỏ nhóm 1
-          - 'no_counts': loại bỏ nhóm 2
-          - 'no_ratios': loại bỏ nhóm 3
-          - 'profile_only': chỉ nhóm 1
-          - 'counts_only': chỉ nhóm 2
-          - 'ratios_only': chỉ nhóm 3
+          - 'all' / 'full': đầy đủ 12 features
+          - 'no_profile' / 'without_profile': loại bỏ nhóm 1 (còn 8 features)
+          - 'no_counts' / 'without_counts': loại bỏ nhóm 2 (còn 7 features)
+          - 'no_ratios' / 'without_ratios': loại bỏ nhóm 3 (còn 9 features)
+          - 'profile_only': chỉ nhóm 1 (4 features)
+          - 'counts_only': chỉ nhóm 2 (5 features)
+          - 'ratios_only': chỉ nhóm 3 (3 features)
+          - 'source_only': giữ đủ 12 features
         """
-        if mode == "all":
+        norm_mode = self.normalize_mode(mode)
+        if norm_mode in ("all", "source_only"):
             return feature_vector
-        elif mode == "no_profile":
+        elif norm_mode == "no_profile":
             idx = self.GROUP_INDICES["counts"] + self.GROUP_INDICES["ratios"]
             return feature_vector[..., idx]
-        elif mode == "no_counts":
+        elif norm_mode == "no_counts":
             idx = self.GROUP_INDICES["profile"] + self.GROUP_INDICES["ratios"]
             return feature_vector[..., idx]
-        elif mode == "no_ratios":
+        elif norm_mode == "no_ratios":
             idx = self.GROUP_INDICES["profile"] + self.GROUP_INDICES["counts"]
             return feature_vector[..., idx]
-        elif mode == "profile_only":
+        elif norm_mode == "profile_only":
             return feature_vector[..., self.GROUP_INDICES["profile"]]
-        elif mode == "counts_only":
+        elif norm_mode == "counts_only":
             return feature_vector[..., self.GROUP_INDICES["counts"]]
-        elif mode == "ratios_only":
+        elif norm_mode == "ratios_only":
             return feature_vector[..., self.GROUP_INDICES["ratios"]]
         else:
             raise ValueError(f"Unknown mode: {mode}")
