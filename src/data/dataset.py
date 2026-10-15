@@ -178,8 +178,8 @@ def collate_tree_batch(batch):
     }
 
 
-def to_additive_mask(adj_mask, nhead):
+def to_additive_mask(adj_mask, nhead, dtype=torch.float32):
     """bool [B,N,N] (True = duoc attend) -> float [B*nhead,N,N] (0 / -inf)
     dung cho nn.MultiheadAttention (xem tree_transformer.py)."""
-    m = torch.zeros(adj_mask.shape, dtype=torch.float32).masked_fill(~adj_mask, float("-inf"))
+    m = torch.zeros(adj_mask.shape, dtype=dtype, device=adj_mask.device).masked_fill(~adj_mask, float("-inf"))
     return m.repeat_interleave(nhead, dim=0)
