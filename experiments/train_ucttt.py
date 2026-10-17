@@ -115,6 +115,22 @@ def parse_args():
     parser.add_argument("--nhead", type=int, default=12)
     parser.add_argument("--num_tree_layers", type=int, default=6)
     parser.add_argument("--num_time_windows", type=int, default=8)
+    parser.add_argument("--window_mode", type=str, default="fixed_posts", choices=["fixed_posts", "fixed_windows"],
+                        help="Chế độ chia cửa sổ: 'fixed_posts' (chuẩn bài báo Wu et al. 2025: k bài/cửa sổ) hoặc 'fixed_windows' (cố định K cửa sổ)")
+    parser.add_argument("--window_size", type=int, default=8, help="Kích thước cửa sổ (số posts/cửa sổ) theo Wu et al. 2025")
+    parser.add_argument(
+        "--window_aggregation",
+        type=str,
+        choices=["cumulative", "disjoint"],
+        default="cumulative",
+        help="Cơ chế gom cửa sổ thời gian: 'cumulative' (chuẩn bài báo Wu et al. 2025: cửa sổ sau chứa tất cả node của cửa sổ trước) hoặc 'disjoint'",
+    )
+    parser.add_argument(
+        "--use_class_weights",
+        action="store_true",
+        default=False,
+        help="Áp dụng class weights trong CrossEntropyLoss (mặc định False theo bài báo Wu et al. 2025)",
+    )
     parser.add_argument("--gru_hidden_dim", type=int, default=128)
     parser.add_argument("--fc_hidden_dim", type=int, default=600)
     parser.add_argument("--user_input_dim", type=int, default=12)
@@ -227,9 +243,9 @@ def main():
 
         print(f"    Threads count: Train={len(train_threads)}, Val={len(val_threads)}, Test={len(test_threads)}")
 
-        train_ds = PHEMETreeDataset(train_threads, embeddings, num_windows=args.num_time_windows)
-        val_ds = PHEMETreeDataset(val_threads, embeddings, num_windows=args.num_time_windows)
-        test_ds = PHEMETreeDataset(test_threads, embeddings, num_windows=args.num_time_windows)
+        train_ds = PHEMETreeDataset(train_threads, embeddings, num_windows=args.num_time_windows, window_size=args.window_size, window_mode=args.window_mode)
+        val_ds = PHEMETreeDataset(val_threads, embeddings, num_windows=args.num_time_windows, window_size=args.window_size, window_mode=args.window_mode)
+        test_ds = PHEMETreeDataset(test_threads, embeddings, num_windows=args.num_time_windows, window_size=args.window_size, window_mode=args.window_mode)
 
         train_loader = DataLoader(
             train_ds, batch_size=args.batch_size, shuffle=True,
@@ -244,9 +260,13 @@ def main():
             collate_fn=collate_tree_batch, num_workers=0
         )
 
-        train_labels = [th["label"] for th in train_threads]
-        class_weights = calculate_class_weights(train_labels).to(device)
-        criterion = nn.CrossEntropyLoss(weight=class_weights)
+        # Thiết lập hàm mất mát CrossEntropy (mặc định unweighted theo Wu et al. 2025)
+        if args.use_class_weights:
+            train_labels = [th["label"] for th in train_threads]
+            class_weights = calculate_class_weights(train_labels).to(device)
+            criterion = nn.CrossEntropyLoss(weight=class_weights)
+        else:
+            criterion = nn.CrossEntropyLoss()
 
         sample_emb = next(iter(embeddings.values()))
         text_dim = sample_emb.shape[0] if torch.is_tensor(sample_emb) else 384
@@ -263,6 +283,7 @@ def main():
             num_classes=2,
             use_user_credibility=True,
             fusion_type=fusion_key,
+            window_aggregation=args.window_aggregation,
             use_root_user_shortcut=args.use_root_user_shortcut,
             dropout=args.dropout,
         ).to(device)
@@ -387,6 +408,8 @@ def main():
             "nhead": args.nhead,
             "num_tree_layers": args.num_tree_layers,
             "num_time_windows": args.num_time_windows,
+            "window_mode": args.window_mode,
+            "window_size": args.window_size,
             "gru_hidden_dim": args.gru_hidden_dim,
             "user_input_dim": args.user_input_dim,
             "fusion_type": args.fusion_type,

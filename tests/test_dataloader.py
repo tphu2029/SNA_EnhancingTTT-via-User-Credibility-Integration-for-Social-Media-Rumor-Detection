@@ -20,7 +20,7 @@ def fake_node(i, t):
 
 
 def test_toy_tree():
-    """Cay: a -> b -> d, a -> c. Moi node nam trong 1 cua so rieng (N=4, K=4)."""
+    """Cay: a -> b -> d, a -> c. Kiem thu ca 2 che do fixed_posts (Wu et al. 2025) va fixed_windows."""
     a, b, c, d = "a", "b", "c", "d"
     th = {
         "thread_id": "toy", "event": "toy", "label": 1,
@@ -31,10 +31,22 @@ def test_toy_tree():
         "edges": [(a, b), (a, c), (b, d)],
     }
     emb = {k: torch.zeros(384) for k in "abcd"}
-    item = PHEMETreeDataset([th], emb)[0]
 
+    # 1. Test che do cu fixed_windows (K=4)
+    item_fw = PHEMETreeDataset([th], emb, window_mode="fixed_windows", num_windows=4)[0]
+    assert item_fw["time_windows"].tolist() == [0, 1, 2, 3]
+
+    # 2. Test che do bai bao Wu et al. 2025 (k=8 posts/window -> N=4 nam gon trong window 0)
+    item_paper = PHEMETreeDataset([th], emb, window_mode="fixed_posts", window_size=8)[0]
+    assert item_paper["time_windows"].tolist() == [0, 0, 0, 0]
+    assert item_paper["num_windows"] == 1
+
+    # 3. Test voi window_size=1
+    item = PHEMETreeDataset([th], emb, window_mode="fixed_posts", window_size=1)[0]
     assert item["tree_structure"]["depth"].tolist() == [0, 1, 1, 2]
     assert item["time_windows"].tolist() == [0, 1, 2, 3]
+    assert item["num_windows"] == 4
+
     adj = item["adj_mask"]
     assert adj[3, 1] and adj[1, 3], "d va b phai thay nhau"
     assert adj[3, 0] and adj[0, 3], "d va goc phai thay nhau"
@@ -46,7 +58,7 @@ def test_toy_tree():
 def test_real_batch():
     threads = pickle.load(open(ROOT / "data/processed/pheme_processed.pkl", "rb"))
     emb = torch.load(ROOT / "data/processed/text_embeddings.pt", weights_only=False)
-    ds = PHEMETreeDataset(threads, emb)
+    ds = PHEMETreeDataset(threads, emb, window_mode="fixed_posts", window_size=8)
     g = torch.Generator().manual_seed(42)
     dl = DataLoader(ds, batch_size=16, shuffle=True, generator=g,
                     collate_fn=collate_tree_batch, num_workers=0)
@@ -64,7 +76,8 @@ def test_real_batch():
     assert adj.shape == (B, N, N) and adj.dtype == torch.bool
     assert batch["depths"].shape == (B, N) and batch["depths"].max() <= 99
     tw = batch["time_window_assignments"]
-    assert tw.shape == (B, N) and tw.min() >= 0 and tw.max() <= 3
+    assert tw.shape == (B, N) and tw.min() >= 0
+    assert "num_windows" in batch and batch["num_windows"].shape == (B,)
     assert batch["labels"].shape == (B,) and set(batch["labels"].tolist()) <= {0, 1}
     assert not torch.isnan(batch["text_features"]).any()
     assert not torch.isnan(batch["user_features"]).any()
