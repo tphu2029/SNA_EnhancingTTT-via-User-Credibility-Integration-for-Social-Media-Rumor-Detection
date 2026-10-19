@@ -32,25 +32,39 @@ def collect_texts(threads):
 
 
 @torch.no_grad()
-def encode(texts, model_name, batch_size, device):
-    if model_name == "microsoft/deberta-v3-small":
-        # fallback: mean pooling, output 768 chieu (khac 384 cua MiniLM!)
-        from transformers import AutoTokenizer, AutoModel
-        tok = AutoTokenizer.from_pretrained(model_name)
-        mdl = AutoModel.from_pretrained(model_name).to(device).eval()
-        out = []
-        for i in tqdm(range(0, len(texts), batch_size), desc="Encoding"):
-            b = tok(texts[i:i + batch_size], padding=True, truncation=True,
-                    max_length=128, return_tensors="pt").to(device)
-            h = mdl(**b).last_hidden_state
-            m = b["attention_mask"].unsqueeze(-1).float()
-            out.append(((h * m).sum(1) / m.sum(1)).cpu())
-        return torch.cat(out)
-    from sentence_transformers import SentenceTransformer
-    st = SentenceTransformer(model_name, device=device)
-    emb = st.encode(texts, batch_size=batch_size, show_progress_bar=True,
-                    convert_to_tensor=True)
-    return emb.cpu().float()
+def encode(texts, model_name, batch_size, device, pooling="max"):
+    if model_name.startswith("sentence-transformers/"):
+        from sentence_transformers import SentenceTransformer
+        st = SentenceTransformer(model_name, device=device)
+        emb = st.encode(texts, batch_size=batch_size, show_progress_bar=True,
+                        convert_to_tensor=True)
+        return emb.cpu().float()
+
+    from transformers import AutoTokenizer, AutoModel
+    print(f"Loading tokenizer & model: {model_name}...")
+    tok = AutoTokenizer.from_pretrained(model_name)
+    mdl = AutoModel.from_pretrained(model_name).to(device).eval()
+
+    out = []
+    for i in tqdm(range(0, len(texts), batch_size), desc=f"Encoding ({model_name}, pool={pooling})"):
+        b = tok(texts[i:i + batch_size], padding=True, truncation=True,
+                max_length=128, return_tensors="pt").to(device)
+        h = mdl(**b).last_hidden_state  # [B, L, D]
+        m = b["attention_mask"].unsqueeze(-1).float()  # [B, L, 1]
+
+        if pooling == "max":
+            # Max-pooling theo cong thuc (1) trong bai bao Wu et al. (PLOS ONE 2025)
+            h_masked = h.masked_fill(m == 0, -1e9)
+            pooled = h_masked.max(dim=1).values
+        elif pooling == "cls":
+            pooled = h[:, 0, :]
+        else:
+            # Mean-pooling
+            denom = m.sum(1).clamp(min=1e-9)
+            pooled = (h * m).sum(1) / denom
+
+        out.append(pooled.cpu().float())
+    return torch.cat(out)
 
 
 def sanity_check(emb_dict, threads):
@@ -65,10 +79,14 @@ def sanity_check(emb_dict, threads):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model_name", default="all-MiniLM-L6-v2")
-    ap.add_argument("--batch_size", type=int, default=256)
+    ap.add_argument("--model_name", default="bert-base-uncased",
+                    help="Model HuggingFace: 'bert-base-uncased' (chuan bai bao Wu et al. 2025) hoac 'all-MiniLM-L6-v2'")
+    ap.add_argument("--batch_size", type=int, default=128,
+                    help="Batch size (128 hoac 64 cho GPU 4GB VRAM)")
+    ap.add_argument("--pooling", default="max", choices=["max", "mean", "cls"],
+                    help="Pooling: 'max' (theo Wu et al. 2025), 'mean', 'cls'")
     ap.add_argument("--input", default="data/processed/pheme_processed.pkl")
-    ap.add_argument("--output", default="data/processed/text_embeddings.pt")
+    ap.add_argument("--output", default="data/processed/text_embeddings_bert.pt")
     ap.add_argument("--limit", type=int, default=0,
                     help="chi encode N tweet dau de test nhanh (0 = tat ca)")
     args = ap.parse_args()
@@ -76,6 +94,8 @@ def main():
     torch.manual_seed(42); np.random.seed(42); torch.cuda.manual_seed_all(42)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print("Device:", device)
+    if device == "cuda":
+        print("GPU Name:", torch.cuda.get_device_name(0))
 
     with open(args.input, "rb") as f:
         threads = pickle.load(f)
@@ -87,7 +107,7 @@ def main():
         ids = ids[:args.limit]
         print(f"[TEST MODE] chi encode {len(ids)} tweet")
 
-    emb = encode([id2text[i] for i in ids], args.model_name, args.batch_size, device)
+    emb = encode([id2text[i] for i in ids], args.model_name, args.batch_size, device, pooling=args.pooling)
     emb_dict = {tid: emb[k].clone() for k, tid in enumerate(ids)}
 
     if not args.limit:

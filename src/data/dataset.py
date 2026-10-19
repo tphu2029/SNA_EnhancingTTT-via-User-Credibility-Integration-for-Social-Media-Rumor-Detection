@@ -47,7 +47,7 @@ def build_tree(nodes, edges):
 
 
 def equal_depth_windows(times, k=NUM_WINDOWS):
-    """Chia node thanh k cua so co so node xap xi bang nhau, theo thu tu thoi gian."""
+    """Chia node thanh k cua so co so node xap xi bang nhau, theo thu tu thoi gian (Equal-depth)."""
     n = len(times)
     order = np.argsort(times, kind="stable")
     win = np.zeros(n, dtype=np.int64)
@@ -55,13 +55,35 @@ def equal_depth_windows(times, k=NUM_WINDOWS):
     return win
 
 
+def paper_time_windows(times, window_size=8):
+    """
+    Chia node theo bai bao goc Wu et al. (PLOS ONE 2025):
+    Moi cua so gom k bai dang (mac dinh k = 8).
+    So cua so thuc te = ceil(N / window_size).
+    """
+    n = len(times)
+    order = np.argsort(times, kind="stable")
+    win = np.zeros(n, dtype=np.int64)
+    win[order] = np.arange(n) // max(1, window_size)
+    return win
+
+
 class PHEMETreeDataset(Dataset):
-    def __init__(self, threads_data, text_embeddings, user_feature_extractor=None,
-                 num_windows=NUM_WINDOWS):
+    def __init__(
+        self,
+        threads_data,
+        text_embeddings,
+        user_feature_extractor=None,
+        num_windows=None,
+        window_size=8,
+        window_mode="fixed_posts",  # 'fixed_posts' (chuan bai bao Wu et al. 2025) hoac 'fixed_windows' (cu)
+    ):
         self.threads = threads_data
         self.emb = text_embeddings
         self.uext = user_feature_extractor
-        self.k = num_windows
+        self.window_mode = window_mode
+        self.window_size = window_size
+        self.k = num_windows if num_windows is not None else NUM_WINDOWS
 
     def __len__(self):
         return len(self.threads)
@@ -84,7 +106,13 @@ class PHEMETreeDataset(Dataset):
 
         parent, depth, reach = build_tree(nodes, th["edges"])
         times = np.array([_parse_time(x.get("created_at")) for x in nodes])
-        win = equal_depth_windows(times, self.k)
+
+        if self.window_mode == "fixed_posts":
+            win = paper_time_windows(times, window_size=self.window_size)
+        else:
+            win = equal_depth_windows(times, self.k)
+
+        num_win = int(win.max()) + 1 if len(win) > 0 else 1
 
         related = reach | reach.T                              # to tien <-> con chau
         same_win = win[:, None] == win[None, :]
@@ -97,6 +125,7 @@ class PHEMETreeDataset(Dataset):
             "tree_structure": {"edges": edges, "depth": torch.from_numpy(depth)},
             "timestamps": torch.from_numpy(times),
             "time_windows": torch.from_numpy(win),
+            "num_windows": num_win,
             "adj_mask": torch.from_numpy(adj),
             "label": int(th["label"]),
             "event": th["event"],
@@ -117,6 +146,7 @@ def collate_tree_batch(batch):
     windows = torch.zeros(B, max_n, dtype=torch.long)
     padding = torch.ones(B, max_n, dtype=torch.bool)           # True = node padding
     adj = torch.zeros(B, max_n, max_n, dtype=torch.bool)       # True = duoc attend
+    num_windows_list = []
 
     for b, item in enumerate(batch):
         n = item["num_nodes"]
@@ -126,6 +156,8 @@ def collate_tree_batch(batch):
         windows[b, :n] = item["time_windows"]
         padding[b, :n] = False
         adj[b, :n, :n] = item["adj_mask"]
+        nw = item.get("num_windows", int(item["time_windows"].max().item()) + 1 if n > 0 else 1)
+        num_windows_list.append(nw)
 
     idx = torch.arange(max_n)
     adj[:, idx, idx] = True        # node padding tu attend chinh no, tranh softmax ra NaN
@@ -134,7 +166,8 @@ def collate_tree_batch(batch):
         "text_features": text,                       # [B, N, D_text]
         "user_features": user,                       # [B, N, 12]
         "depths": depths,                            # [B, N]
-        "time_window_assignments": windows,          # [B, N] gia tri 0..K-1
+        "time_window_assignments": windows,          # [B, N] gia tri window index
+        "num_windows": torch.tensor(num_windows_list, dtype=torch.long), # [B] so cua so thuc te
         "adj_mask": adj,                             # [B, N, N] bool
         "attention_mask": adj,                       # ten theo issue (cung tensor)
         "node_padding_mask": padding,                # [B, N] True = padding
@@ -145,8 +178,8 @@ def collate_tree_batch(batch):
     }
 
 
-def to_additive_mask(adj_mask, nhead):
+def to_additive_mask(adj_mask, nhead, dtype=torch.float32):
     """bool [B,N,N] (True = duoc attend) -> float [B*nhead,N,N] (0 / -inf)
     dung cho nn.MultiheadAttention (xem tree_transformer.py)."""
-    m = torch.zeros(adj_mask.shape, dtype=torch.float32).masked_fill(~adj_mask, float("-inf"))
+    m = torch.zeros(adj_mask.shape, dtype=dtype, device=adj_mask.device).masked_fill(~adj_mask, float("-inf"))
     return m.repeat_interleave(nhead, dim=0)

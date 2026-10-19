@@ -80,7 +80,9 @@ def train_one_epoch(
         depths = batch["depths"].to(device)
         node_padding_mask = batch["node_padding_mask"].to(device)
         time_windows = batch["time_window_assignments"].to(device)
+        num_windows = batch["num_windows"].to(device) if "num_windows" in batch else None
         user_features = batch["user_features"].to(device) if "user_features" in batch else None
+        adj_mask = batch["adj_mask"].to(device) if "adj_mask" in batch else None
         labels = batch["labels"].to(device)
 
         optimizer.zero_grad()
@@ -90,7 +92,9 @@ def train_one_epoch(
             depths=depths,
             user_features=user_features,
             time_window_assignments=time_windows,
+            adj_mask=adj_mask,
             node_padding_mask=node_padding_mask,
+            num_windows=num_windows,
         )
 
         loss = criterion(logits, labels)
@@ -137,7 +141,9 @@ def evaluate_epoch(
             depths = batch["depths"].to(device)
             node_padding_mask = batch["node_padding_mask"].to(device)
             time_windows = batch["time_window_assignments"].to(device)
+            num_windows = batch["num_windows"].to(device) if "num_windows" in batch else None
             user_features = batch["user_features"].to(device) if "user_features" in batch else None
+            adj_mask = batch["adj_mask"].to(device) if "adj_mask" in batch else None
             labels = batch["labels"].to(device)
 
             logits = model(
@@ -145,7 +151,9 @@ def evaluate_epoch(
                 depths=depths,
                 user_features=user_features,
                 time_window_assignments=time_windows,
+                adj_mask=adj_mask,
                 node_padding_mask=node_padding_mask,
+                num_windows=num_windows,
             )
 
             loss = criterion(logits, labels)

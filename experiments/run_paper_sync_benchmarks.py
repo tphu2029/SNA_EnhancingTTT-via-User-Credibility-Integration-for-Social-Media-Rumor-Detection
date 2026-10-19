@@ -158,46 +158,72 @@ def build_comparison_table():
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Chạy đối chứng chuẩn bài báo Wu et al. 2025: TTT Baseline vs UC-TTT")
+    parser.add_argument("--embeddings_path", default="data/processed/text_embeddings_bert.pt" if (ROOT / "data/processed/text_embeddings_bert.pt").exists() else "data/processed/text_embeddings.pt",
+                        help="Đường dẫn file text embeddings")
+    parser.add_argument("--window_mode", default="fixed_posts", choices=["fixed_posts", "fixed_windows"],
+                        help="Chế độ chia cửa sổ thời gian ('fixed_posts': k=8 posts theo Wu et al. 2025)")
+    parser.add_argument("--window_size", type=int, default=8,
+                        help="Số bài viết / cửa sổ (k=8)")
+    parser.add_argument("--num_time_windows", type=int, default=8,
+                        help="Số cửa sổ tối đa hoặc số lát cắt (K=8)")
+    parser.add_argument("--fusion_type", default="residual_gate", choices=["residual_gate", "gated", "cross_attention", "concatenation"],
+                        help="Loại fusion trong UC-TTT")
+    parser.add_argument("--epochs", type=int, default=35, help="Số epochs")
+    parser.add_argument("--patience", type=int, default=8, help="Patience early stopping")
+    parser.add_argument("--lr", type=float, default=4.2e-5, help="Learning rate")
+    parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu", help="Device")
+    args = parser.parse_args()
+
     py_exec = sys.executable
 
     # 1. Chạy Lần 1: TTT Baseline gốc (Wu et al. 2025)
     cmd_ttt = [
         py_exec,
         str(ROOT / "experiments/train_ttt_baseline.py"),
+        "--embeddings_path", args.embeddings_path,
         "--events_mode", "5",
+        "--window_mode", args.window_mode,
+        "--window_size", str(args.window_size),
         "--d_model", "768",
         "--nhead", "12",
         "--num_tree_layers", "6",
-        "--num_time_windows", "8",
+        "--num_time_windows", str(args.num_time_windows),
         "--fc_hidden_dim", "600",
-        "--lr", "4.2e-5",
-        "--epochs", "35",
-        "--patience", "8",
-        "--device", "cuda",
+        "--lr", str(args.lr),
+        "--epochs", str(args.epochs),
+        "--patience", str(args.patience),
+        "--device", args.device,
     ]
     run_command(cmd_ttt, "LẦN 1: HUẤN LUYỆN TTT BASELINE (WU ET AL. 2025 - KHÔNG BẬT UC)")
 
-    # 2. Chạy Lần 2: UC-TTT Proposed (bật User Credibility với Gated Fusion)
+    # 2. Chạy Lần 2: UC-TTT Proposed (bật User Credibility với Gated/Residual-Gate Fusion)
     cmd_ucttt = [
         py_exec,
         str(ROOT / "experiments/train_ucttt.py"),
+        "--embeddings_path", args.embeddings_path,
         "--events_mode", "5",
-        "--fusion_type", "gated",
+        "--window_mode", args.window_mode,
+        "--window_size", str(args.window_size),
+        "--fusion_type", args.fusion_type,
         "--d_model", "768",
         "--nhead", "12",
         "--num_tree_layers", "6",
-        "--num_time_windows", "8",
+        "--num_time_windows", str(args.num_time_windows),
         "--fc_hidden_dim", "600",
-        "--lr", "4.2e-5",
-        "--epochs", "35",
-        "--patience", "8",
-        "--device", "cuda",
+        "--lr", str(args.lr),
+        "--epochs", str(args.epochs),
+        "--patience", str(args.patience),
+        "--device", args.device,
     ]
-    run_command(cmd_ucttt, "LẦN 2: HUẤN LUYỆN UC-TTT PROPOSED (BẬT USER CREDIBILITY - GATED FUSION)")
+    run_command(cmd_ucttt, f"LẦN 2: HUẤN LUYỆN UC-TTT PROPOSED (BẬT USER CREDIBILITY - {args.fusion_type.upper()})")
 
     # 3. Tổng hợp và in bảng so sánh
     build_comparison_table()
 
 
 if __name__ == "__main__":
+    import torch
     main()
+

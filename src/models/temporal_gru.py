@@ -27,16 +27,22 @@ class TemporalGRU(nn.Module):
         lengths: [batch_size] số lượng window thực tế của từng thread (nếu có padding)
         Trả về vector đặc trưng tổng hợp thời gian [batch_size, hidden_dim]
         """
-        out, h_n = self.gru(time_slice_embeddings)
-        
-        # Nếu có lengths, lấy hidden state tại bước thời gian cuối cùng của từng batch item
         if lengths is not None:
-            batch_size = time_slice_embeddings.size(0)
-            last_indices = (lengths - 1).clamp(min=0).view(-1, 1, 1).expand(-1, 1, out.size(2))
-            last_out = out.gather(1, last_indices).squeeze(1)
+            lengths_cpu = lengths.cpu().clamp(min=1)
+            packed = nn.utils.rnn.pack_padded_sequence(
+                time_slice_embeddings, lengths_cpu, batch_first=True, enforce_sorted=False
+            )
+            packed_out, h_n = self.gru(packed)
+            if self.bidirectional:
+                last_out = torch.cat([h_n[-2], h_n[-1]], dim=-1)
+            else:
+                last_out = h_n[-1]
         else:
-            # Lấy step cuối cùng
-            last_out = out[:, -1, :]
+            out, h_n = self.gru(time_slice_embeddings)
+            if self.bidirectional:
+                last_out = torch.cat([h_n[-2], h_n[-1]], dim=-1)
+            else:
+                last_out = h_n[-1]
 
         projected = self.layer_norm(self.fc(last_out))
         return projected
