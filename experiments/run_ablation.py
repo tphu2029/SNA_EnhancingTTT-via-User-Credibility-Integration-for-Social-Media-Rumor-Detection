@@ -151,7 +151,7 @@ def set_seed(seed: int = 42):
         torch.backends.cudnn.benchmark = False
 
 
-def split_stratified_loeo(threads, test_event, val_ratio=0.15, seed=42):
+def split_stratified_loeo(threads, test_event, val_ratio=0.30, seed=42):
     test_threads = [th for th in threads if th["event"] == test_event]
     other_threads = [th for th in threads if th["event"] != test_event]
 
@@ -266,7 +266,8 @@ def run_single_variant_loeo(variant_cfg: Dict[str, Any], args, threads, embeddin
         ckpt_path = checkpoint_dir / f"fold_{fold_idx}_{test_ev}.pt"
         early_stopping = EarlyStopping(
             patience=args.patience,
-            mode="max",
+            mode=args.checkpoint_criterion,
+            stabilize_threshold=args.stabilize_threshold,
             save_path=str(ckpt_path) if args.save_checkpoints else None,
         )
 
@@ -287,18 +288,20 @@ def run_single_variant_loeo(variant_cfg: Dict[str, Any], args, threads, embeddin
                 device=device,
             )
             val_f1 = val_metrics["macro_f1"]
-            improved = early_stopping(val_f1, model)
+            score = val_loss if args.checkpoint_criterion in ["loss_stabilize", "min_loss"] else val_f1
+            improved = early_stopping(score, model, epoch=epoch)
 
             if epoch % 5 == 0 or improved or epoch == args.epochs:
                 mark = "*" if improved else " "
                 print(f"    Epoch {epoch:02d}/{args.epochs:02d} {mark} | Train Loss: {train_loss:.4f}, F1: {train_metrics['macro_f1']:.4f} | Val Loss: {val_loss:.4f}, F1: {val_f1:.4f}")
 
             if early_stopping.early_stop:
-                print(f"    [Early Stopping] Dừng sớm tại Epoch {epoch}. Best Val F1: {early_stopping.best_score:.4f}")
+                print(f"    [Early Stopping] Dừng sớm tại Epoch {epoch}. Selected Checkpoint tại Epoch {early_stopping.best_epoch} (tiêu chí '{args.checkpoint_criterion}').")
                 break
 
         # Tải lại trọng số tốt nhất cho Test
         early_stopping.load_best_weights(model)
+        print(f"    -> Đã nạp checkpoint được chọn tại Epoch {early_stopping.best_epoch} (tiêu chí '{args.checkpoint_criterion}') để đánh giá Test set.")
         test_loss, test_metrics, preds, probs, labels = evaluate_epoch(
             model=model,
             dataloader=test_loader,
@@ -584,7 +587,25 @@ def parse_args():
     parser.add_argument("--gru_hidden_dim", type=int, default=128)
     parser.add_argument("--fc_hidden_dim", type=int, default=600)
     parser.add_argument("--use_root_user_shortcut", action="store_true", default=False)
-    parser.add_argument("--val_ratio", type=float, default=0.15)
+    parser.add_argument(
+        "--val_ratio",
+        type=float,
+        default=0.30,
+        help="Tỷ lệ validation split từ 4 sự kiện còn lại (mặc định 0.30 tức 7:3 train:val theo chuẩn Wu et al. 2025)",
+    )
+    parser.add_argument(
+        "--checkpoint_criterion",
+        type=str,
+        choices=["loss_stabilize", "min_loss", "max_f1"],
+        default="loss_stabilize",
+        help="Tiêu chí chọn checkpoint theo phản hồi tác giả Wu et al. 2025: 'loss_stabilize' (vừa bắt đầu ổn định), 'min_loss', hoặc 'max_f1'",
+    )
+    parser.add_argument(
+        "--stabilize_threshold",
+        type=float,
+        default=0.015,
+        help="Ngưỡng độ biến thiên tương đối của validation loss để phát hiện điểm bắt đầu ổn định (mặc định 0.015 tức 1.5%%)",
+    )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--folds", type=str, default="all", help="'all' hoặc chỉ số fold (ví dụ '0,1')")
     parser.add_argument("--save_checkpoints", action="store_true", default=True)

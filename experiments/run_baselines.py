@@ -59,6 +59,21 @@ def main():
     print_result_table(res_b2)
     results["baseline2_prop_rf"] = res_b2
 
+    # Baseline 2b: Tabular Features + XGBoost (PHEME v5 - 5 events)
+    print("\n>>> Đang chạy Baseline 2b: Tabular Features + XGBoost (PHEME v5 - 5 Events)...")
+    from src.baselines.tabular_xgboost import TabularXGBoostBaseline
+    b2b_5 = TabularXGBoostBaseline(n_estimators=100, max_depth=5, learning_rate=0.05)
+    res_b2b_5 = b2b_5.evaluate_loeo(dataset, events_mode="5")
+    print_result_table(res_b2b_5)
+    results["baseline2b_tabular_xgboost_5events"] = res_b2b_5
+
+    # Baseline 2b: Tabular Features + XGBoost (Full PHEME - 9 events)
+    print("\n>>> Đang chạy Baseline 2b: Tabular Features + XGBoost (Full PHEME - 9 Events)...")
+    b2b_9 = TabularXGBoostBaseline(n_estimators=100, max_depth=5, learning_rate=0.05)
+    res_b2b_9 = b2b_9.evaluate_loeo(dataset, events_mode="9")
+    print_result_table(res_b2b_9)
+    results["baseline2b_tabular_xgboost_9events"] = res_b2b_9
+
     # Lưu kết quả JSON
     out_json = r"e:\UIT\MXH\PJ\results\baseline_results.json"
     os.makedirs(os.path.dirname(out_json), exist_ok=True)
