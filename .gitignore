@@ -37,3 +37,6 @@ results/**/checkpoints/
 # Scratch notes
 scratch_*.txt
 
+
+# Lưu trữ kết quả cũ (85/15)
+kết quả trước đó với test*/
