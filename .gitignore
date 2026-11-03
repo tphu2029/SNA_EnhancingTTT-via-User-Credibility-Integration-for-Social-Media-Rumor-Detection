@@ -33,3 +33,7 @@ data/processed/*.pt
 results/**/checkpoints/
 *.pth
 *.pt
+
+# Scratch notes
+scratch_*.txt
+

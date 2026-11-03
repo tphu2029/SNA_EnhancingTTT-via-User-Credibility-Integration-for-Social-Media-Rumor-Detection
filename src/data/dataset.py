@@ -77,6 +77,7 @@ class PHEMETreeDataset(Dataset):
         num_windows=None,
         window_size=8,
         window_mode="fixed_posts",  # 'fixed_posts' (chuan bai bao Wu et al. 2025) hoac 'fixed_windows' (cu)
+        feature_group="all",        # 'all', 'without_profile', 'without_counts', 'without_ratios', 'profile_only', 'counts_only', 'ratios_only', 'source_only'
     ):
         self.threads = threads_data
         self.emb = text_embeddings
@@ -84,6 +85,7 @@ class PHEMETreeDataset(Dataset):
         self.window_mode = window_mode
         self.window_size = window_size
         self.k = num_windows if num_windows is not None else NUM_WINDOWS
+        self.feature_group = feature_group
 
     def __len__(self):
         return len(self.threads)
@@ -103,6 +105,16 @@ class PHEMETreeDataset(Dataset):
 
         text = torch.stack([self.emb[str(x["id"])] for x in nodes]).float()      # [N, D]
         user = torch.from_numpy(np.stack([self._user_feat(x) for x in nodes]))   # [N, 12]
+
+        if self.feature_group and self.feature_group not in ("all", "full"):
+            from src.data.user_feature_builder import UserCredibilityExtractor
+            norm_fg = UserCredibilityExtractor.normalize_mode(self.feature_group)
+            if norm_fg == "source_only":
+                # Giu nguyen tweet goc (node 0), dat toan bo user phan hoi ve 0
+                if n > 1:
+                    user[1:] = 0.0
+            else:
+                user = UserCredibilityExtractor().select_feature_group(user, mode=norm_fg)
 
         parent, depth, reach = build_tree(nodes, th["edges"])
         times = np.array([_parse_time(x.get("created_at")) for x in nodes])

@@ -45,11 +45,15 @@ class UserCredibilityTemporalTreeTransformer(nn.Module):
         fusion_type: str = "gated",         # 'gated', 'residual_gate', 'concat', 'additive'
         window_aggregation: str = "cumulative", # 'cumulative' (chuẩn bài báo Wu et al. 2025) hoặc 'disjoint'
         use_root_user_shortcut: bool = False,# Tắt root user shortcut để tránh overfitting out-of-domain
+        use_tree_transformer: bool = True,  # Bóc tách kiến trúc: Bật/tắt Tree Transformer
+        use_temporal_gru: bool = True,      # Bóc tách kiến trúc: Bật/tắt Temporal GRU
         dropout: float = 0.2,
     ):
         super().__init__()
         self.use_user_credibility = use_user_credibility
         self.use_root_user_shortcut = use_root_user_shortcut
+        self.use_tree_transformer = use_tree_transformer
+        self.use_temporal_gru = use_temporal_gru
         self.num_time_windows = num_time_windows
         self.d_model = d_model
         self.nhead = nhead
@@ -77,23 +81,32 @@ class UserCredibilityTemporalTreeTransformer(nn.Module):
             )
             
         # 4. Tree Transformer (6 layers, 12 heads, dim_feedforward=2048 theo Wu et al. 2025)
-        ff_dim = dim_feedforward if dim_feedforward is not None else min(d_model * 4, 2048)
-        self.tree_transformer = TreeTransformer(
-            num_layers=num_tree_layers,
-            d_model=d_model,
-            nhead=nhead,
-            dim_feedforward=ff_dim,
-            dropout=dropout,
-        )
+        if self.use_tree_transformer:
+            ff_dim = dim_feedforward if dim_feedforward is not None else min(d_model * 4, 2048)
+            self.tree_transformer = TreeTransformer(
+                num_layers=num_tree_layers,
+                d_model=d_model,
+                nhead=nhead,
+                dim_feedforward=ff_dim,
+                dropout=dropout,
+            )
         
-        # 5. Temporal GRU (Bidirectional GRU)
-        self.temporal_gru = TemporalGRU(
-            input_dim=d_model,
-            hidden_dim=gru_hidden_dim,
-            num_layers=1,
-            bidirectional=True,
-            dropout=dropout,
-        )
+        # 5. Temporal GRU (Bidirectional GRU) hoặc Static Projection
+        if self.use_temporal_gru:
+            self.temporal_gru = TemporalGRU(
+                input_dim=d_model,
+                hidden_dim=gru_hidden_dim,
+                num_layers=1,
+                bidirectional=True,
+                dropout=dropout,
+            )
+        else:
+            self.static_proj = nn.Sequential(
+                nn.Linear(d_model, gru_hidden_dim),
+                nn.LayerNorm(gru_hidden_dim),
+                nn.GELU(),
+                nn.Dropout(dropout),
+            )
         
         # 6. Classifier Head (FC dimension 600 theo Wu et al. 2025)
         classifier_in_dim = gru_hidden_dim + d_model
@@ -135,71 +148,84 @@ class UserCredibilityTemporalTreeTransformer(nn.Module):
             root_user_emb = u_all[:, 0, :]
             h_node = self.user_encoder(user_features, text_repr=h_node)
             
-        # 4. Đi qua Tree Transformer (áp dụng Tree Adjacency Mask nếu có)
-        tree_attn_mask = None
-        kpm = node_padding_mask
-        if adj_mask is not None:
-            # Chuyển boolean adj_mask [B, N, N] thành additive float mask [B * nhead, N, N]
-            # True -> 0.0 (được attend), False -> -inf (chặn attention)
-            tree_attn_mask = torch.zeros(
-                adj_mask.shape, dtype=h_node.dtype, device=h_node.device
-            ).masked_fill(~adj_mask, float("-inf"))
-            tree_attn_mask = tree_attn_mask.repeat_interleave(self.nhead, dim=0)
+        # 4. Đi qua Tree Transformer (nếu bật) hoặc giữ node representation nguyên thủy
+        if self.use_tree_transformer:
+            tree_attn_mask = None
+            kpm = node_padding_mask
+            if adj_mask is not None:
+                # Chuyển boolean adj_mask [B, N, N] thành additive float mask [B * nhead, N, N]
+                # True -> 0.0 (được attend), False -> -inf (chặn attention)
+                tree_attn_mask = torch.zeros(
+                    adj_mask.shape, dtype=h_node.dtype, device=h_node.device
+                ).masked_fill(~adj_mask, float("-inf"))
+                tree_attn_mask = tree_attn_mask.repeat_interleave(self.nhead, dim=0)
 
-            # Đồng bộ key_padding_mask sang float để tránh deprecation warning của PyTorch
-            if node_padding_mask is not None:
-                kpm = torch.zeros_like(node_padding_mask, dtype=h_node.dtype).masked_fill(
-                    node_padding_mask, float("-inf")
-                )
+                # Đồng bộ key_padding_mask sang float để tránh deprecation warning của PyTorch
+                if node_padding_mask is not None:
+                    kpm = torch.zeros_like(node_padding_mask, dtype=h_node.dtype).masked_fill(
+                        node_padding_mask, float("-inf")
+                    )
 
-        h_tree = self.tree_transformer(
-            h_node,
-            attn_mask=tree_attn_mask,
-            key_padding_mask=kpm,
-        )
+            h_tree = self.tree_transformer(
+                h_node,
+                attn_mask=tree_attn_mask,
+                key_padding_mask=kpm,
+            )
+        else:
+            # w/o Tree Transformer: Bỏ qua topo cây lan truyền
+            h_tree = h_node
         
         # Root node representation (vị trí index 0)
         root_repr = h_tree[:, 0, :]
         
-        # 5. Phân bổ các node vào các time windows và Temporal GRU
-        if time_window_assignments is None:
-            # Mặc định chia đều theo index nếu không truyền time assignment
-            num_w = self.num_time_windows
-            time_window_assignments = (torch.arange(num_nodes, device=text_features.device) * num_w // num_nodes).repeat(batch_size, 1)
-            total_windows = num_w
-            if num_windows is None:
-                num_windows = torch.full((batch_size,), num_w, device=text_features.device, dtype=torch.long)
-        else:
-            if num_windows is None:
-                if node_padding_mask is not None:
-                    valid_tw = time_window_assignments.masked_fill(node_padding_mask, 0)
-                else:
-                    valid_tw = time_window_assignments
-                num_windows = valid_tw.max(dim=1).values + 1
-            total_windows = int(time_window_assignments.max().item()) + 1
-            total_windows = max(total_windows, 1)
-
-        window_embeddings = []
-        for w in range(total_windows):
-            if self.window_aggregation == "cumulative":
-                # Cumulative subtrees (Wu et al. 2025): Cửa sổ w chứa tất cả các node từ đầu đến w (<= w)
-                mask_w = (time_window_assignments <= w).unsqueeze(-1).float()
+        # 5. Phân bổ các node vào các time windows và Temporal GRU (hoặc Static Pooling)
+        if self.use_temporal_gru:
+            if time_window_assignments is None:
+                # Mặc định chia đều theo index nếu không truyền time assignment
+                num_w = self.num_time_windows
+                time_window_assignments = (torch.arange(num_nodes, device=text_features.device) * num_w // num_nodes).repeat(batch_size, 1)
+                total_windows = num_w
+                if num_windows is None:
+                    num_windows = torch.full((batch_size,), num_w, device=text_features.device, dtype=torch.long)
             else:
-                # Disjoint: Chỉ chứa các node thuộc riêng cửa sổ w (== w)
-                mask_w = (time_window_assignments == w).unsqueeze(-1).float()
+                if num_windows is None:
+                    if node_padding_mask is not None:
+                        valid_tw = time_window_assignments.masked_fill(node_padding_mask, 0)
+                    else:
+                        valid_tw = time_window_assignments
+                    num_windows = valid_tw.max(dim=1).values + 1
+                total_windows = int(time_window_assignments.max().item()) + 1
+                total_windows = max(total_windows, 1)
 
-            if node_padding_mask is not None:
-                mask_w = mask_w * (~node_padding_mask).unsqueeze(-1).float()
+            window_embeddings = []
+            for w in range(total_windows):
+                if self.window_aggregation == "cumulative":
+                    # Cumulative subtrees (Wu et al. 2025): Cửa sổ w chứa tất cả các node từ đầu đến w (<= w)
+                    mask_w = (time_window_assignments <= w).unsqueeze(-1).float()
+                else:
+                    # Disjoint: Chỉ chứa các node thuộc riêng cửa sổ w (== w)
+                    mask_w = (time_window_assignments == w).unsqueeze(-1).float()
+
+                if node_padding_mask is not None:
+                    mask_w = mask_w * (~node_padding_mask).unsqueeze(-1).float()
+                
+                denom = mask_w.sum(dim=1).clamp(min=1e-6)
+                pooled_w = (h_tree * mask_w).sum(dim=1) / denom
+                window_embeddings.append(pooled_w)
+
+            # [B, total_windows, d_model]
+            seq_windows = torch.stack(window_embeddings, dim=1)
             
-            denom = mask_w.sum(dim=1).clamp(min=1e-6)
-            pooled_w = (h_tree * mask_w).sum(dim=1) / denom
-            window_embeddings.append(pooled_w)
-
-        # [B, total_windows, d_model]
-        seq_windows = torch.stack(window_embeddings, dim=1)
-        
-        # Temporal aggregation
-        h_temporal = self.temporal_gru(seq_windows, lengths=num_windows)
+            # Temporal aggregation
+            h_temporal = self.temporal_gru(seq_windows, lengths=num_windows)
+        else:
+            # w/o Temporal GRU: Bỏ chiều thời gian động, pooling tĩnh toàn cây
+            if node_padding_mask is not None:
+                tree_mask = (~node_padding_mask).unsqueeze(-1).float()
+                h_static = (h_tree * tree_mask).sum(dim=1) / tree_mask.sum(dim=1).clamp(min=1e-6)
+            else:
+                h_static = h_tree.mean(dim=1)
+            h_temporal = self.static_proj(h_static)
         
         # 6. Ghép root representation + temporal representation + root user shortcut -> phân loại
         features_to_cat = [root_repr, h_temporal]

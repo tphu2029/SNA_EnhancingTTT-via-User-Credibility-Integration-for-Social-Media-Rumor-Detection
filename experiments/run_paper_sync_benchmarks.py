@@ -170,6 +170,9 @@ def main():
                         help="Số cửa sổ tối đa hoặc số lát cắt (K=8)")
     parser.add_argument("--fusion_type", default="residual_gate", choices=["residual_gate", "gated", "cross_attention", "concatenation"],
                         help="Loại fusion trong UC-TTT")
+    parser.add_argument("--val_ratio", type=float, default=0.30, help="Tỷ lệ validation split từ 4 sự kiện còn lại (mặc định 0.30 tức 7:3)")
+    parser.add_argument("--checkpoint_criterion", default="loss_stabilize", choices=["loss_stabilize", "min_loss", "max_f1"], help="Tiêu chí chọn checkpoint")
+    parser.add_argument("--stabilize_threshold", type=float, default=0.015, help="Ngưỡng độ biến thiên tương đối của validation loss")
     parser.add_argument("--epochs", type=int, default=35, help="Số epochs")
     parser.add_argument("--patience", type=int, default=8, help="Patience early stopping")
     parser.add_argument("--lr", type=float, default=4.2e-5, help="Learning rate")
@@ -192,6 +195,9 @@ def main():
         "--num_time_windows", str(args.num_time_windows),
         "--fc_hidden_dim", "600",
         "--lr", str(args.lr),
+        "--val_ratio", str(args.val_ratio),
+        "--checkpoint_criterion", args.checkpoint_criterion,
+        "--stabilize_threshold", str(args.stabilize_threshold),
         "--epochs", str(args.epochs),
         "--patience", str(args.patience),
         "--device", args.device,
@@ -213,6 +219,9 @@ def main():
         "--num_time_windows", str(args.num_time_windows),
         "--fc_hidden_dim", "600",
         "--lr", str(args.lr),
+        "--val_ratio", str(args.val_ratio),
+        "--checkpoint_criterion", args.checkpoint_criterion,
+        "--stabilize_threshold", str(args.stabilize_threshold),
         "--epochs", str(args.epochs),
         "--patience", str(args.patience),
         "--device", args.device,

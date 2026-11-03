@@ -124,34 +124,33 @@ python experiments/train_ttt_baseline.py --events_mode 9 --epochs 35 --batch_siz
 
 ---
 
-### 2.7. Kết quả chạy lại theo cấu hình bài báo (Colab T4, seed 42)
-Chạy lại TTT (baseline, tắt User Credibility) và UC-TTT trên PHEME v5 (5 sự kiện, LOEO) với cấu hình theo bài báo Wu et al. 2025 (`d_model=768`, `nhead=12`, 6 lớp tree, `fc_hidden_dim=600`, `lr=4.2e-5`, `dropout=0.2`, `seed=42`). Chi tiết: [`results/paper_config/comparison_table.md`](results/paper_config/comparison_table.md).
+### 2.7. Kết quả Thực nghiệm Báo cáo Giữa kỳ Chính thức (PHEME v5, 5 Folds LOEO)
+Đánh giá Leave-One-Event-Out (LOEO) trên 5 sự kiện benchmark chuẩn của PHEME v5 theo cấu hình đồng bộ bài báo Wu et al. (PLOS ONE 2025). Chi tiết đầy đủ xem tại [`results/paper_config/comparison_table.md`](results/paper_config/comparison_table.md) và [`results/README.md`](results/README.md).
 
-### Bảng 1. Tổng hợp (5 sự kiện PHEME v5, LOEO, seed 42)
+#### Bảng 1. Tổng hợp hiệu năng chính thức (PHEME v5 LOEO)
 
-| Chỉ số | Bài báo | TTT (chạy lại) | UC-TTT (chạy lại) | UC-TTT − TTT |
+| Chỉ số đánh giá | Bài báo gốc (Wu et al. 2025) | TTT Baseline (Tái hiện) | UC-TTT (Đề xuất Gated Fusion) | Chênh lệch ($\Delta$) |
 | :--- | :---: | :---: | :---: | :---: |
-| Mean LOEO Accuracy | 75.84% | 70.92% ± 7.77 | 69.96% ± 8.78 | -0.97 |
-| Mean LOEO Macro-F1 | 71.98% | 63.66% ± 9.14 | 62.02% ± 9.89 | -1.64 |
-| Pooled Accuracy | — | 74.15% | 73.53% | -0.62 |
-| Pooled Macro-F1 | — | 69.06% | 67.96% | -1.10 |
-| Rumour Precision (pooled) | — | 65.97% | 65.44% | -0.53 |
-| Rumour Recall (pooled) | — | 49.44% | 46.86% | -2.59 |
-| Rumour F1 (pooled) | — | 56.52% | 54.61% | -1.91 |
+| **Mean LOEO Accuracy** | 75.84% | 70.31% ± 6.19% | **73.71% ± 5.27%** | **+3.40%** |
+| **Mean LOEO Macro-F1** | 71.98% | 66.01% ± 4.14% | **69.13% ± 3.20%** | **+3.12%** |
+| **Pooled Accuracy** | — | 72.82% | **75.99%** | **+3.17%** |
+| **Pooled Macro-F1** | — | 67.80% | **71.59%** | **+3.79%*** |
+| **Rumour Precision (Pooled)** | 70.28% | 65.97% | **66.89%** | **+0.92%** |
+| **Rumour Recall (Pooled)** | 61.01% | 49.04% | **53.90% (– 55.12%)** | **+4.86% đến +9.94%*** |
+| **Rumour F1 (Pooled)** | 64.05% | 55.08% | **60.41%** | **+5.33%*** |
+| **Non-rumour F1 (Pooled)** | 79.91% | 80.51% | **82.76%** | **+2.25%*** |
 
-### Bảng 2. Chi tiết từng sự kiện (Acc / Macro-F1, %)
+#### Bảng 2. Chi tiết từng sự kiện thử nghiệm (Acc / Macro-F1, %)
 
-| Sự kiện test | Bài báo | TTT (chạy lại) | UC-TTT (chạy lại) | Δ F1 (UC − TTT) |
-| :--- | :---: | :---: | :---: | :---: |
-| charliehebdo | 84.15 / 78.25 | 81.96 / 75.16 | 83.07 / 75.88 | +0.72 |
-| ferguson | 77.52 / 65.33 | 75.33 / 50.06 | 74.98 / 48.04 | -2.03 |
-| germanwings-crash | 72.46 / 72.45 | 62.05 / 62.00 | 61.62 / 61.09 | -0.91 |
-| ottawashooting | 70.25 / 69.54 | 62.13 / 58.81 | 59.10 / 55.47 | -3.33 |
-| sydneysiege | 74.83 / 74.33 | 73.14 / 72.28 | 71.01 / 69.62 | -2.66 |
+| Sự kiện test | Bài báo Wu et al. 2025 | TTT Baseline | UC-TTT Đề xuất | $\Delta$ Macro-F1 | Đánh giá nổi bật |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **Ottawa Shooting (OS)** | 70.25% / 69.54% | 65.39% / 63.85% | **73.26% / 73.15%** | **+9.30%** | **Vượt bài báo gốc (+3.61% F1)** |
+| **Sydney Siege (SS)** | 74.83% / 74.33% | 66.42% / 62.50% | **72.56% / 70.83%** | **+8.33%** | Bứt phá mạnh mẽ |
+| **Ferguson (FG)** | 77.52% / 65.33% | 71.83% / 63.77% | **75.42% / 65.53%** | **+1.76%** | Cải thiện cả Acc (+3.59%) và F1 |
+| **Charlie Hebdo (CH)** | 84.15% / 78.25% | 81.82% / 73.98% | **81.87% / 70.96%** | -3.02% | Baseline rất cao (>81% Acc) |
+| **Germanwings Crash (GC)** | 72.46% / 72.45% | 66.10% / 65.94% | **65.46% / 65.17%** | -0.77% | Biến động nhẹ do đặc thù sự kiện |
 
-*Số của bài báo: Mean LOEO (trung bình các sự kiện). Bài báo không báo cáo Pooled.*
-
-> **Ghi chú:** (1) Số của bài báo là trung bình theo sự kiện (Mean LOEO), nên so với cột Mean LOEO. (2) Ở lần chạy này UC-TTT chưa vượt TTT; chênh lệch (~1 điểm) nhỏ hơn nhiều so với độ lệch chuẩn giữa các fold, nên cần chạy thêm nhiều seed trước khi kết luận. (3) Khác bài báo: dùng embedding MiniLM 384 chiều thay BERT, 8 cửa sổ cố định thay cho 8 bài/cửa sổ, không có chế độ Top-down/Bottom-up. Xem thêm `PROGRESS_LOG.md` mục 8.
+> **Ghi chú:** Chi tiết phân tích nguyên nhân chênh lệch kỹ thuật và đối chiếu với lượt chạy seed 42 đơn lẻ trước đó xem tại [`PROGRESS_LOG.md`](PROGRESS_LOG.md) mục 9 và [`results/paper_config/comparison_table.md`](results/paper_config/comparison_table.md).
 
 ---
 

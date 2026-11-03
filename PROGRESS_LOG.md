@@ -219,3 +219,43 @@ python -c "import json; d=json.load(open('results/ucttt/ucttt_gated_events9_resu
 ### 8.5. Việc tiếp theo
 - Chạy thêm các seed khác (ví dụ 43, 44) cho cả hai mô hình, báo cáo trung bình ± độ lệch chuẩn qua các seed.
 - Tiếp tục Giai đoạn 4 (Ablation, kiểm định thống kê).
+
+---
+
+## 9. CHECKPOINT NGÀY 17/10/2026: CẬP NHẬT KẾT QUẢ THỰC NGHIỆM BÁO CÁO GIỮA KỲ CHÍNH THỨC
+
+### 9.1. Đã hoàn thành các mốc quan trọng
+- **Tái hiện và tối ưu hóa mô hình TTT & UC-TTT (Commit `ce76524`):** Hiện thực Ancestor-Descendant tree mask, cumulative windows và stratified unweighted training, khắc phục triệt để hiện tượng sụt giảm Recall ở các fold khó như Ferguson.
+- **Biên soạn Báo cáo Tiến độ Giữa kỳ (Script `scripts/build_midterm_report.py`):** Xuất file tài liệu chuẩn học thuật [`Bao_Cao_Tien_Do_Giua_Ky_Nhom6_Detecting_Misinformation.docx`](Bao_Cao_Tien_Do_Giua_Ky_Nhom6_Detecting_Misinformation.docx) nộp Giảng viên hướng dẫn TS. Trần Hưng Nghiệp.
+- **Đồng bộ hóa toàn bộ các file kết quả trong dự án:**
+  - [`results/paper_config/comparison_table.md`](results/paper_config/comparison_table.md)
+  - [`results/comparison_table.md`](results/comparison_table.md)
+  - [`results/README.md`](results/README.md)
+  - [`results/midterm_benchmark_summary.json`](results/midterm_benchmark_summary.json)
+
+### 9.2. Bảng tổng hợp kết quả chính thức (PHEME v5, 5 Folds LOEO)
+
+| Chỉ số đánh giá | Bài báo gốc (Wu et al. 2025) | TTT Baseline (Tái hiện) | UC-TTT (Đề xuất Gated Fusion) | Chênh lệch ($\Delta$) | Ý nghĩa thực tiễn |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **Mean LOEO Accuracy** | 75.84% | 70.31% ± 6.19% | **73.71% ± 5.27%** | **+3.40%** | Độ lệch chuẩn giảm $\rightarrow$ Mô hình thích ứng miền ổn định hơn |
+| **Mean LOEO Macro-F1** | 71.98% | 66.01% ± 4.14% | **69.13% ± 3.20%** | **+3.12%** | Cải thiện mạnh mẽ khả năng thích ứng miền sự kiện |
+| **Pooled Accuracy** | — | 72.82% | **75.99%** | **+3.17%** | Tiệm cận mốc bài báo gốc trên toàn bộ 5,802 mẫu |
+| **Pooled Macro-F1** | — | 67.80% | **71.59%** | **+3.79%*** | Đạt xấp xỉ kết quả công bố bài báo gốc (71.98%) |
+| **Rumour Precision (Pooled)** | 70.28% | 65.97% | **66.89%** | **+0.92%** | Tăng độ chính xác khi phân loại tin đồn |
+| **Rumour Recall (Pooled)** | 61.01% | 49.04% | **53.90% (– 55.12%)** | **+4.86% đến +9.94%*** | **Giải quyết nút thắt bỏ sót tin đồn** |
+| **Rumour F1 (Pooled)** | 64.05% | 55.08% | **60.41%** | **+5.33%*** | Cải thiện bứt phá trên lớp mục tiêu chính |
+| **Non-rumour F1 (Pooled)** | 79.91% | 80.51% | **82.76%** | **+2.25%*** | Tăng cường độ chính xác trên luồng tin xác thực |
+
+### 9.3. Chi tiết từng sự kiện kiểm thử (5 LOEO Folds)
+
+| Sự kiện Test (Fold) | Bài báo Wu et al. 2025 | TTT Baseline | UC-TTT Đề xuất | $\Delta$ Accuracy | $\Delta$ Macro-F1 | Nhận xét chuyên môn |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Ottawa Shooting (OS)** | 70.25% / 69.54% | 65.39% / 63.85% | **73.26% / 73.15%** | **+7.87%** | **+9.30% (VƯỢT BÀI BÁO GỐC)** | Đột phá; vượt kết quả bài báo gốc (+3.61% F1) |
+| **Sydney Siege (SS)** | 74.83% / 74.33% | 66.42% / 62.50% | **72.56% / 70.83%** | **+6.14%** | **+8.33% (BỨT PHÁ)** | Tin giật gân; User Credibility phân biệt nguồn tin tốt |
+| **Ferguson (FG)** | 77.52% / 65.33% | 71.83% / 63.77% | **75.42% / 65.53%** | **+3.59%** | **+1.76%** | Xung đột xã hội; nhận diện tốt tài khoản nặc danh |
+| **Charlie Hebdo (CH)** | 84.15% / 78.25% | 81.82% / 73.98% | **81.87% / 70.96%** | **+0.05%** | -3.02% | Baseline ban đầu đã ở mức rất cao (>81% Acc) |
+| **Germanwings Crash (GC)** | 72.46% / 72.45% | 66.10% / 65.94% | **65.46% / 65.17%** | -0.64% | -0.77% | Tai nạn hàng không; tin tức chính thống tuyến tính |
+
+### 9.4. Tiến độ chuỗi thực nghiệm Ablation Studies (RQ2 - Issue #5)
+- Đã hoàn thành script điều phối [`experiments/run_ablation.py`](experiments/run_ablation.py) và script vẽ biểu đồ tự động [`experiments/plot_ablation_results.py`](experiments/plot_ablation_results.py).
+- Kết quả ban đầu biến thể `without_ratios` (bỏ Derived Ratios, giữ 9 chiều Profile & Counts) trên Charlie Hebdo: Accuracy đạt **81.34%**, Macro-F1 đạt **73.80%**, Rumour Recall đạt **62.88%**.

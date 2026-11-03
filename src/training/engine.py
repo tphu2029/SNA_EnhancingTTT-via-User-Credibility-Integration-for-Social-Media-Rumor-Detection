@@ -11,48 +11,152 @@ from src.utils.metrics import compute_all_metrics
 
 class EarlyStopping:
     """
-    Early Stopping theo dõi metric (mặc định: Validation Macro-F1).
-    Nếu sau `patience` epochs không có cải thiện vượt quá `min_delta`, dừng huấn luyện.
+    Early Stopping & Checkpoint Selection.
+    Hỗ trợ các chiến lược:
+      - 'loss_stabilize' (Chiến lược tác giả Wu et al. 2025 - PLOS ONE):
+        Chọn checkpoint tại thời điểm Validation Loss vừa bắt đầu ổn định (stabilize),
+        thay vì chọn epoch có loss tối thiểu tuyệt đối (tránh overfit vào tập validation).
+      - 'min' / 'min_loss': Chọn checkpoint có Validation Loss thấp nhất.
+      - 'max' / 'max_f1': Chọn checkpoint có metric (ví dụ Macro-F1) cao nhất.
     """
     def __init__(
         self,
-        patience: int = 10,
+        patience: int = 8,
         min_delta: float = 1e-4,
-        mode: str = "max",
+        mode: str = "loss_stabilize",
+        stabilize_threshold: float = 0.015,
+        min_epochs: int = 3,
         save_path: Optional[str] = None,
     ):
         self.patience = patience
         self.min_delta = min_delta
         self.mode = mode
+        self.stabilize_threshold = stabilize_threshold
+        self.min_epochs = min_epochs
         self.save_path = save_path
+
         self.counter = 0
-        self.best_score = -float("inf") if mode == "max" else float("inf")
+        self.best_score = float("inf") if mode in ["min", "min_loss", "loss_stabilize"] else -float("inf")
+        self.best_epoch = 0
         self.early_stop = False
         self.best_model_state = None
 
-    def __call__(self, current_score: float, model: nn.Module) -> bool:
-        if self.mode == "max":
-            improved = current_score > (self.best_score + self.min_delta)
-        else:
-            improved = current_score < (self.best_score - self.min_delta)
+        # Lịch sử theo dõi cho loss_stabilize
+        self.history: List[float] = []
+        self.stabilized = False
+        self.stabilized_epoch: Optional[int] = None
+        self.stabilized_loss: Optional[float] = None
+        self.min_loss = float("inf")
+        self.min_loss_epoch = 0
+        self.min_loss_state = None
 
-        if improved:
-            self.best_score = current_score
-            self.counter = 0
-            self.best_model_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
-            if self.save_path:
-                os.makedirs(os.path.dirname(self.save_path), exist_ok=True)
-                torch.save(self.best_model_state, self.save_path)
-            return True
-        else:
-            self.counter += 1
-            if self.counter >= self.patience:
-                self.early_stop = True
-            return False
+    def __call__(self, current_score: float, model: nn.Module, epoch: Optional[int] = None) -> bool:
+        ep = epoch if epoch is not None else (len(self.history) + 1)
+        self.history.append(current_score)
+
+        if self.mode == "loss_stabilize":
+            val_loss = current_score
+            improved = False
+
+            # Cập nhật điểm min loss để dự phòng
+            if val_loss < (self.min_loss - self.min_delta):
+                self.min_loss = val_loss
+                self.min_loss_epoch = ep
+                self.min_loss_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+
+            # Kiểm tra điều kiện bắt đầu ổn định theo Wu et al. 2025:
+            # 1. Đã qua giai đoạn khởi tạo ban đầu (min_epochs)
+            # 2. Chưa từng đánh dấu stabilize trước đó (chọn thời điểm 'just started to stabilize')
+            if ep >= self.min_epochs and not self.stabilized and len(self.history) >= 2:
+                prev_loss = self.history[-2]
+                rel_decrease = (prev_loss - val_loss) / (abs(prev_loss) + 1e-8)
+
+                # Điểm ổn định: độ giảm loss chậm lại rõ rệt (dưới ngưỡng stabilize_threshold, ví dụ < 1.5%)
+                # và val_loss không bị bùng nổ phân kỳ so với mức thấp nhất đạt được (trong phạm vi 5%)
+                is_stabilizing = (rel_decrease < self.stabilize_threshold) and (val_loss <= self.min_loss * 1.05)
+
+                if is_stabilizing:
+                    self.stabilized = True
+                    self.stabilized_epoch = ep
+                    self.stabilized_loss = val_loss
+                    self.best_epoch = ep
+                    self.best_score = val_loss
+                    self.best_model_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+                    improved = True
+
+                    if self.save_path:
+                        os.makedirs(os.path.dirname(self.save_path), exist_ok=True)
+                        torch.save(self.best_model_state, self.save_path)
+
+                    print(
+                        f"\n  [*] [Wu et al. 2025 Checkpoint Selection] Validation loss bat dau on dinh tai Epoch {ep} "
+                        f"(Loss: {val_loss:.4f}, Rel Change: {rel_decrease * 100:.2f}% < {self.stabilize_threshold * 100:.1f}%). "
+                        f"Da khoa checkpoint nay theo khuyen nghi tac gia!"
+                    )
+
+            # Quản lý Early Stopping
+            if self.stabilized:
+                self.counter += 1
+                if self.counter >= self.patience:
+                    self.early_stop = True
+            else:
+                if val_loss < (self.best_score - self.min_delta):
+                    self.best_score = val_loss
+                    self.best_epoch = ep
+                    self.best_model_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+                    self.counter = 0
+                    improved = True
+                    if self.save_path:
+                        os.makedirs(os.path.dirname(self.save_path), exist_ok=True)
+                        torch.save(self.best_model_state, self.save_path)
+                else:
+                    self.counter += 1
+                    if self.counter >= self.patience:
+                        self.early_stop = True
+
+            return improved
+
+        elif self.mode in ["min", "min_loss"]:
+            improved = current_score < (self.best_score - self.min_delta)
+            if improved:
+                self.best_score = current_score
+                self.best_epoch = ep
+                self.counter = 0
+                self.best_model_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+                if self.save_path:
+                    os.makedirs(os.path.dirname(self.save_path), exist_ok=True)
+                    torch.save(self.best_model_state, self.save_path)
+                return True
+            else:
+                self.counter += 1
+                if self.counter >= self.patience:
+                    self.early_stop = True
+                return False
+
+        else: # 'max' or 'max_f1'
+            improved = current_score > (self.best_score + self.min_delta)
+            if improved:
+                self.best_score = current_score
+                self.best_epoch = ep
+                self.counter = 0
+                self.best_model_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+                if self.save_path:
+                    os.makedirs(os.path.dirname(self.save_path), exist_ok=True)
+                    torch.save(self.best_model_state, self.save_path)
+                return True
+            else:
+                self.counter += 1
+                if self.counter >= self.patience:
+                    self.early_stop = True
+                return False
 
     def load_best_weights(self, model: nn.Module):
-        if self.best_model_state is not None:
-            model.load_state_dict(self.best_model_state)
+        target_state = self.best_model_state
+        if target_state is None and self.min_loss_state is not None:
+            target_state = self.min_loss_state
+
+        if target_state is not None:
+            model.load_state_dict(target_state)
         elif self.save_path and os.path.exists(self.save_path):
             state = torch.load(self.save_path, weights_only=True)
             model.load_state_dict(state)
