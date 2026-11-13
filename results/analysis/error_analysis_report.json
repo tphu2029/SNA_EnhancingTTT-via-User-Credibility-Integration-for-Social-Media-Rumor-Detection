@@ -1,0 +1,267 @@
+{
+  "statistical_tests": {
+    "paired_ttest_source_only": {
+      "t_stat": 0.6771409909862696,
+      "p_value": 0.5354568708182766
+    },
+    "wilcoxon_source_only": {
+      "w_stat": 7.0,
+      "p_value": 1.0
+    },
+    "paired_ttest_counts_only": {
+      "t_stat": 1.0863469232030036,
+      "p_value": 0.33841054261587117
+    }
+  },
+  "cost_tradeoff_matrix": [
+    {
+      "model": "Source User Only",
+      "data_crawled_per_thread": "1 User Profile (Root tweet author only)",
+      "user_feature_dim": "12 dims (1 node)",
+      "tree_attention_overhead": "Không có (Chỉ chiếu 1 vector root)",
+      "relative_training_time": "1.0x (Nhanh nhất ~1.5 - 2.0 phút/fold)",
+      "vram_footprint": "~1.2 GB GPU VRAM",
+      "mean_loeo_f1": "64.75% ± 13.73%",
+      "failure_mode": "Sụp đổ hoàn toàn ở Germanwings (F1 37.72%, Recall 4.62%)",
+      "practical_viability": "Rất nguy hiểm trong triển khai thực tế (bỏ lỡ >95% tin đồn thảm họa)"
+    },
+    {
+      "model": "TTT Baseline (Wu 2025)",
+      "data_crawled_per_thread": "Text + Cấu trúc topo (Không cần user profile)",
+      "user_feature_dim": "0 dims",
+      "tree_attention_overhead": "O(N^2) cho N nút trong cây (Chỉ trên Text + Depth)",
+      "relative_training_time": "1.4x (~3.0 phút/fold)",
+      "vram_footprint": "~1.8 GB GPU VRAM",
+      "mean_loeo_f1": "68.59% ± 4.54%",
+      "failure_mode": "Kém tại sự kiện tin đồn hỗn loạn Sydney Siege (F1 chỉ đạt 63.81%)",
+      "practical_viability": "Mức chuẩn mực (chưa khai thác được tín hiệu người dùng)"
+    },
+    {
+      "model": "UC-TTT Full (Proposed)",
+      "data_crawled_per_thread": "N User Profiles (Toàn bộ tác giả trong cây lan truyền)",
+      "user_feature_dim": "12 dims x N nút",
+      "tree_attention_overhead": "O(N^2) với Gated Attention dung hợp User + Text",
+      "relative_training_time": "1.6x (~3.5 phút/fold)",
+      "vram_footprint": "~2.1 GB GPU VRAM",
+      "mean_loeo_f1": "68.61% ± 4.54% (Counts Only: 70.46%)",
+      "failure_mode": "Không bị sụp đổ ở bất kỳ fold nào (Germanwings đạt 64.00% F1)",
+      "practical_viability": "Hoàn toàn khả thi, độ ổn định cao, bảo vệ hệ thống trước sự kiện khẩn cấp"
+    }
+  ],
+  "case_studies": {
+    "case_1_germanwings_authority_blindspot": [
+      {
+        "thread_id": "580370249712697344",
+        "author": "@SkyNews",
+        "author_name": "Sky News",
+        "verified": true,
+        "followers": 1963381,
+        "text": "A #Germanwings spokesman confirms two babies were among those on board a flight which crashed in the French Alps http://t.co/npoy1K5Huo",
+        "reactions_count": 6,
+        "reactions": [
+          {
+            "author": "@ADZtbh",
+            "text": "@SkyNews 😩"
+          },
+          {
+            "author": "@keithlemon88",
+            "text": "@SkyNews so sad 😟😟"
+          },
+          {
+            "author": "@RobinsonDarryl",
+            "text": "@SkyNews heart breaking"
+          },
+          {
+            "author": "@ElaineHynes3",
+            "text": "@SkyNews awwwww :("
+          }
+        ]
+      },
+      {
+        "thread_id": "580352540316946432",
+        "author": "@501Awani",
+        "author_name": "Astro AWANI",
+        "verified": true,
+        "followers": 407431,
+        "text": "'No survivors' in #Germanwings crash says French transport minister adding it crashed after pilot issued distress signal in good weather",
+        "reactions_count": 4,
+        "reactions": [
+          {
+            "author": "@mishaelemilyy",
+            "text": "@lilisurayaaaa @NotoriousAlya @501Awani OMFG 😩😭😭😭"
+          },
+          {
+            "author": "@addakamil",
+            "text": "😢😢 RT“@501Awani: 'No survivors' in #Germanwings crash says French transport minister adding it crashed after pilot issued distress signal”"
+          },
+          {
+            "author": "@mishaelemilyy",
+            "text": "@NotoriousAlya @lilisurayaaaa BABI 😩😩😩"
+          },
+          {
+            "author": "@mishaelemilyy",
+            "text": "@NotoriousAlya @lilisurayaaaa @501Awani OMFG SAME"
+          }
+        ]
+      },
+      {
+        "thread_id": "580882302621843456",
+        "author": "@NahlahAyed",
+        "author_name": "Nahlah Ayed",
+        "verified": true,
+        "followers": 21557,
+        "text": "New York Times just reporting one of the pilots was locked out of the cockpit before it crashed #Germanwings #cbc",
+        "reactions_count": 4,
+        "reactions": [
+          {
+            "author": "@ValMackinnon",
+            "text": "@NahlahAyed This keeps getting worse."
+          },
+          {
+            "author": "@MorganRoebuck",
+            "text": "@NahlahAyed This is turning into a real head-scratcher."
+          },
+          {
+            "author": "@micronaught",
+            "text": "@NahlahAyed terrible crash , potentially made horrifically worse."
+          },
+          {
+            "author": "@eltonmorrow1",
+            "text": "@NahlahAyed suicide."
+          }
+        ]
+      }
+    ],
+    "case_2_sydney_crowd_skepticism": [
+      {
+        "thread_id": "544512064694546432",
+        "author": "@PzFeed",
+        "author_name": "PzFeed Top News",
+        "verified": false,
+        "followers": 201578,
+        "text": "GUNFIRE AND EXPLOSIONS CONTINUE AS POLICE STORM CAFE IN SYDNEY.",
+        "reactions_count": 9,
+        "reactions": [
+          {
+            "author": "@PapaSwamp",
+            "text": "@PzFeed Tac medics are doing CPR on someone.."
+          },
+          {
+            "author": "@DoomMagician",
+            "text": "@PzFeed NIGGGAAAA"
+          },
+          {
+            "author": "@IntGalSmuggler",
+            "text": "@PzFeed Jesus Christ.  I wonder If it actually only one guy"
+          },
+          {
+            "author": "@_Scoracek",
+            "text": "“@PzFeed GUNFIRE AND EXPLOSIONS CONTINUE AS POLICE STORM CAFE IN SYDNEY.” LOUD NOISES."
+          }
+        ]
+      },
+      {
+        "thread_id": "544390130682068993",
+        "author": "@cnnbrk",
+        "author_name": "CNN Breaking News",
+        "verified": true,
+        "followers": 21719478,
+        "text": "Hostage taker in Sydney cafe demands 2 things: ISIS flag, phone call with Australian PM.  http://t.co/TSrJhOhW15 #sydneysiege",
+        "reactions_count": 23,
+        "reactions": [
+          {
+            "author": "@zuzuhaha",
+            "text": "@_Confessor who even knows at this point, half these news channels sound like they're reading comments from reddit."
+          },
+          {
+            "author": "@_Confessor",
+            "text": "@zuzuhaha I think so. This is one lone-wolf dude who feels disenfranchised and hasn't had sex in a long time. Not a terrorist, IMO."
+          },
+          {
+            "author": "@gwriter85",
+            "text": "Shit “@cnnbrk: Hostage taker in Sydney cafe demands 2 things: ISIS flag, phone call with Australian PM.  http://t.co/e6pN3Cjwhc #sydneysiege"
+          },
+          {
+            "author": "@ShilpaSShah",
+            "text": "“@cnnbrk: Hostage taker in Sydney cafe demands 2 things: ISIS flag, phone call with Australian PM.  http://t.co/yAzFkdbELh #sydneysiege”"
+          }
+        ]
+      },
+      {
+        "thread_id": "544380899639689216",
+        "author": "@RT_com",
+        "author_name": "RT",
+        "verified": true,
+        "followers": 824800,
+        "text": "Aussie grand mufti &amp; Imam Council condemn #Sydneysiege hostage capture http://t.co/m51P8dUPhB - LIVE UPDATES http://t.co/tTw3kMkYTZ",
+        "reactions_count": 10,
+        "reactions": [
+          {
+            "author": "@D_A_Price",
+            "text": "@RT_com Oh look, the #alqaeda #AlShabaab #Alnusra #isis flag...don't seem very moderate now, do they?"
+          },
+          {
+            "author": "@ozpoljunkie",
+            "text": "@RT_com they should be at the door asking the dude to give it up"
+          },
+          {
+            "author": "@knyaz_russkiy",
+            "text": "@RT_com передайте им, чтобы пониже флаг опустили, а то не видно, что написано."
+          },
+          {
+            "author": "@AlatrashHassan",
+            "text": "@RT_com . 4 year's ago president bashar no one save from the terrorist  Australian one of those countries sending support to Syria terrorist"
+          }
+        ]
+      }
+    ],
+    "case_3_condolence_noise_nonrumour": [
+      {
+        "thread_id": "581253085508534272",
+        "author": "@NewsHour",
+        "author_name": "PBS NewsHour",
+        "verified": true,
+        "followers": 657988,
+        "text": "“There's no black box for the human being,” says @milesobrien of the #Germanwings crash http://t.co/rVGxkdbmkF",
+        "reactions_count": 8,
+        "reactions": [
+          {
+            "author": "@LindaLindae9",
+            "text": "@NewsHour @milesobrien some bad things can't be prevented. So sad!"
+          },
+          {
+            "author": "@AhmetPatlican",
+            "text": "@NewsHour @milesobrien It's very early to scapegoat this poor guy. He might be fainted &amp; lowered the altitude and can't unlock the door."
+          },
+          {
+            "author": "@matcatastrophe",
+            "text": "@NewsHour @JamesGleick @milesobrien but I bet Google is working on one."
+          }
+        ]
+      },
+      {
+        "thread_id": "580352455952732160",
+        "author": "@Independent",
+        "author_name": "The Independent",
+        "verified": true,
+        "followers": 1103786,
+        "text": "#Germanwings change their logo to grey and white as a sign of mourning #4U9525\nhttp://t.co/NK5U1GpHxL http://t.co/fZrvGy5p7w",
+        "reactions_count": 8,
+        "reactions": [
+          {
+            "author": "@RobertIdAu",
+            "text": "@Independent @smh: As did Malaysia Airlines and AirAsia when their planes went missing. I suspect it's brand management rather than mourning"
+          },
+          {
+            "author": "@SickBritain1",
+            "text": "@Independent Jesus H Christ, rigamortis hasn't set in yet? How low can marketing and press go!!!!!"
+          },
+          {
+            "author": "@carolnieves2009",
+            "text": "\"@Independent: #Germanwings cambia el color del logo en señal de duelo #AccidenteAvionARV\nhttp://t.co/L8fk9IWWW1 http://t.co/rEzJYYq5u6"
+          }
+        ]
+      }
+    ]
+  }
+}

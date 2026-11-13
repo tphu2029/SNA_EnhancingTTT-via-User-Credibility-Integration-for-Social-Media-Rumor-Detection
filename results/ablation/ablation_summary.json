@@ -1,46 +1,20 @@
 {
   "title": "Ablation Studies Summary (RQ2 & Hypothesis H2 - Social Media Rumor Detection)",
-  "protocol": "Leave-One-Event-Out (LOEO) Cross-Validation",
-  "last_updated": "2026-10-15 14:16:13",
+  "protocol": "5-Fold Leave-One-Event-Out (LOEO) Cross-Validation (7:3 Train/Val Split, Loss Stabilize Checkpoint)",
+  "last_updated": "2026-11-07 17:30:00",
   "baseline_full": {
     "variant_key": "full",
-    "display_name": "UC-TTT (Full)",
+    "display_name": "UC-TTT (Full 12 features)",
     "category": "baseline",
     "mean_loeo": {
-      "accuracy": 0.696007633145944,
-      "accuracy_std": 0.07330515790854039,
-      "macro_f1": 0.6262591939177127,
-      "macro_f1_std": 0.07761967128550723
+      "accuracy": 0.725511267939655,
+      "accuracy_std": 0.0615334407372563,
+      "macro_f1": 0.6860930718893933,
+      "macro_f1_std": 0.0423005970884056
     },
     "pooled": {
-      "accuracy": 0.7235436056532231,
-      "macro_f1": 0.6799176200617436,
-      "macro_precision": 0.6897721800717467,
-      "macro_recall": 0.6744872073255339,
-      "delta_pooled_accuracy": -0.01706308169596682,
-      "delta_pooled_macro_f1": -0.02024043547028076,
-      "class_metrics": {
-        "Non-rumour": {
-          "precision": 0.7705396208070004,
-          "recall": 0.8276762402088773,
-          "f1": 0.7980866062437059
-        },
-        "Rumour": {
-          "precision": 0.6090047393364929,
-          "recall": 0.5212981744421906,
-          "f1": 0.5617486338797814
-        }
-      },
-      "confusion_matrix": [
-        [
-          3170,
-          660
-        ],
-        [
-          944,
-          1028
-        ]
-      ]
+      "accuracy": 0.7523267838676319,
+      "macro_f1": 0.7102496663473236
     },
     "delta_mean_loeo_accuracy": 0.0,
     "delta_mean_loeo_macro_f1": 0.0,
@@ -48,6 +22,583 @@
     "delta_pooled_macro_f1": 0.0
   },
   "variants": {
+    "full": {
+      "variant_key": "full",
+      "display_name": "UC-TTT (Full 12 features)",
+      "category": "baseline",
+      "mean_loeo": {
+        "accuracy": 0.725511267939655,
+        "accuracy_std": 0.0615334407372563,
+        "macro_f1": 0.6860930718893933,
+        "macro_f1_std": 0.0423005970884056
+      },
+      "pooled": {
+        "accuracy": 0.7523267838676319,
+        "macro_f1": 0.7102496663473236
+      },
+      "delta_mean_loeo_accuracy": 0.0,
+      "delta_mean_loeo_macro_f1": 0.0,
+      "delta_pooled_accuracy": 0.0,
+      "delta_pooled_macro_f1": 0.0
+    },
+    "counts_only": {
+      "variant_key": "counts_only",
+      "display_name": "Counts Only",
+      "category": "feature",
+      "description": "Chỉ sử dụng duy nhất nhóm Engagement Counts (5 đặc trưng)",
+      "feature_group": "counts_only",
+      "user_input_dim": 5,
+      "model_component": "full",
+      "events_mode": "5",
+      "num_folds": 5,
+      "mean_loeo": {
+        "accuracy": 0.7387801458698764,
+        "accuracy_std": 0.055566205861944606,
+        "macro_f1": 0.7046470219271992,
+        "macro_f1_std": 0.04298261663062785
+      },
+      "pooled": {
+        "accuracy": 0.7635298173043779,
+        "macro_f1": 0.7301725018070204,
+        "macro_precision": 0.7369643861710957,
+        "macro_recall": 0.725315646200859,
+        "class_metrics": {
+          "Non-rumour": {
+            "precision": 0.8063310069790628,
+            "recall": 0.8446475195822454,
+            "f1": 0.8250446314715634
+          },
+          "Rumour": {
+            "precision": 0.6675977653631285,
+            "recall": 0.6059837728194726,
+            "f1": 0.6353003721424774
+          }
+        }
+      },
+      "folds": [
+        {
+          "fold_idx": 0,
+          "test_event": "charliehebdo",
+          "accuracy": 0.8292448292448292,
+          "macro_f1": 0.7641860745989251,
+          "rumour_precision": 0.5973534971644613,
+          "rumour_recall": 0.6899563318777293,
+          "rumour_f1": 0.6403242147923,
+          "non_rumour_f1": 0.8880479344055503
+        },
+        {
+          "fold_idx": 1,
+          "test_event": "sydneysiege",
+          "accuracy": 0.7321867321867321,
+          "macro_f1": 0.7212361854585392,
+          "rumour_precision": 0.7133479212253829,
+          "rumour_recall": 0.6245210727969349,
+          "rumour_f1": 0.6659856996935649,
+          "non_rumour_f1": 0.7764866712235133
+        },
+        {
+          "fold_idx": 2,
+          "test_event": "ferguson",
+          "accuracy": 0.7532808398950132,
+          "macro_f1": 0.6778801566997121,
+          "rumour_precision": 0.5032679738562091,
+          "rumour_recall": 0.5422535211267606,
+          "rumour_f1": 0.5220338983050847,
+          "non_rumour_f1": 0.8337264150943396
+        },
+        {
+          "fold_idx": 3,
+          "test_event": "ottawashooting",
+          "accuracy": 0.7224719101123596,
+          "macro_f1": 0.7216957782782688,
+          "rumour_precision": 0.7989276139410187,
+          "rumour_recall": 0.6340425531914894,
+          "rumour_f1": 0.7069988137603797,
+          "non_rumour_f1": 0.736392742796158
+        },
+        {
+          "fold_idx": 4,
+          "test_event": "germanwings-crash",
+          "accuracy": 0.6567164179104478,
+          "macro_f1": 0.6382369146005509,
+          "rumour_precision": 0.808,
+          "rumour_recall": 0.42436974789915966,
+          "rumour_f1": 0.5564738292011019,
+          "non_rumour_f1": 0.72
+        }
+      ],
+      "elapsed_seconds": 2108.49,
+      "timestamp": "2026-11-04 05:08:21",
+      "delta_mean_loeo_accuracy": 1.3268877930221357,
+      "delta_mean_loeo_macro_f1": 1.855395003780591,
+      "delta_pooled_accuracy": 1.1203033436746002,
+      "delta_pooled_macro_f1": 1.9922835459696864
+    },
+    "profile_only": {
+      "variant_key": "profile_only",
+      "display_name": "Profile Only",
+      "category": "feature",
+      "description": "Chỉ sử dụng duy nhất nhóm Profile & Verification (4 đặc trưng)",
+      "feature_group": "profile_only",
+      "user_input_dim": 4,
+      "model_component": "full",
+      "events_mode": "5",
+      "num_folds": 5,
+      "mean_loeo": {
+        "accuracy": 0.7227832993888499,
+        "accuracy_std": 0.06950037944604956,
+        "macro_f1": 0.6722621699731661,
+        "macro_f1_std": 0.05625849712030618
+      },
+      "pooled": {
+        "accuracy": 0.7512926577042399,
+        "macro_f1": 0.7019359580799279,
+        "macro_precision": 0.727749361879489,
+        "macro_recall": 0.6919384436947553,
+        "class_metrics": {
+          "Non-rumour": {
+            "precision": 0.7754442649434572,
+            "recall": 0.8772845953002611,
+            "f1": 0.8232267548695332
+          },
+          "Rumour": {
+            "precision": 0.6800544588155207,
+            "recall": 0.5065922920892495,
+            "f1": 0.5806451612903226
+          }
+        }
+      },
+      "folds": [
+        {
+          "fold_idx": 0,
+          "test_event": "charliehebdo",
+          "accuracy": 0.834054834054834,
+          "macro_f1": 0.7668816638146636,
+          "rumour_precision": 0.6118811881188119,
+          "rumour_recall": 0.6746724890829694,
+          "rumour_f1": 0.6417445482866043,
+          "non_rumour_f1": 0.892018779342723
+        },
+        {
+          "fold_idx": 1,
+          "test_event": "sydneysiege",
+          "accuracy": 0.678951678951679,
+          "macro_f1": 0.6459068203877749,
+          "rumour_precision": 0.6993865030674846,
+          "rumour_recall": 0.4367816091954023,
+          "rumour_f1": 0.5377358490566038,
+          "non_rumour_f1": 0.7540777917189461
+        },
+        {
+          "fold_idx": 2,
+          "test_event": "ferguson",
+          "accuracy": 0.7620297462817148,
+          "macro_f1": 0.6357484300309307,
+          "rumour_precision": 0.532258064516129,
+          "rumour_recall": 0.3485915492957746,
+          "rumour_f1": 0.42127659574468085,
+          "non_rumour_f1": 0.8502202643171806
+        },
+        {
+          "fold_idx": 3,
+          "test_event": "ottawashooting",
+          "accuracy": 0.7056179775280899,
+          "macro_f1": 0.7029720627124085,
+          "rumour_precision": 0.8095238095238095,
+          "rumour_recall": 0.5787234042553191,
+          "rumour_f1": 0.674937965260546,
+          "non_rumour_f1": 0.731006160164271
+        },
+        {
+          "fold_idx": 4,
+          "test_event": "germanwings-crash",
+          "accuracy": 0.6332622601279317,
+          "macro_f1": 0.6098018729200527,
+          "rumour_precision": 0.7844827586206896,
+          "rumour_recall": 0.38235294117647056,
+          "rumour_f1": 0.5141242937853108,
+          "non_rumour_f1": 0.7054794520547946
+        }
+      ],
+      "elapsed_seconds": 2182.87,
+      "timestamp": "2026-11-04 04:32:56",
+      "delta_mean_loeo_accuracy": -0.2727968550805149,
+      "delta_mean_loeo_macro_f1": -1.3830901916227156,
+      "delta_pooled_accuracy": -0.10341261633919352,
+      "delta_pooled_macro_f1": -0.8313708267395636
+    },
+    "ratios_only": {
+      "variant_key": "ratios_only",
+      "display_name": "Ratios Only",
+      "category": "feature",
+      "description": "Chỉ sử dụng duy nhất nhóm Derived Ratios (3 đặc trưng)",
+      "feature_group": "ratios_only",
+      "user_input_dim": 3,
+      "model_component": "full",
+      "events_mode": "5",
+      "num_folds": 5,
+      "mean_loeo": {
+        "accuracy": 0.7036713751609414,
+        "accuracy_std": 0.07782680283699661,
+        "macro_f1": 0.663894118064515,
+        "macro_f1_std": 0.06876278841084037
+      },
+      "pooled": {
+        "accuracy": 0.7378490175801448,
+        "macro_f1": 0.693781799334275,
+        "macro_precision": 0.7075439806632041,
+        "macro_recall": 0.6867987331783348,
+        "class_metrics": {
+          "Non-rumour": {
+            "precision": 0.7766594775940571,
+            "recall": 0.8462140992167102,
+            "f1": 0.8099462701486942
+          },
+          "Rumour": {
+            "precision": 0.6384284837323512,
+            "recall": 0.5273833671399595,
+            "f1": 0.5776173285198556
+          }
+        }
+      },
+      "folds": [
+        {
+          "fold_idx": 0,
+          "test_event": "charliehebdo",
+          "accuracy": 0.8335738335738335,
+          "macro_f1": 0.7493798376150088,
+          "rumour_precision": 0.6346153846153846,
+          "rumour_recall": 0.5764192139737991,
+          "rumour_f1": 0.6041189931350115,
+          "non_rumour_f1": 0.8946406820950061
+        },
+        {
+          "fold_idx": 1,
+          "test_event": "sydneysiege",
+          "accuracy": 0.7280917280917281,
+          "macro_f1": 0.7076318127791177,
+          "rumour_precision": 0.7526595744680851,
+          "rumour_recall": 0.5421455938697318,
+          "rumour_f1": 0.6302895322939867,
+          "non_rumour_f1": 0.7849740932642487
+        },
+        {
+          "fold_idx": 2,
+          "test_event": "ferguson",
+          "accuracy": 0.6675415573053368,
+          "macro_f1": 0.6311550585613739,
+          "rumour_precision": 0.404,
+          "rumour_recall": 0.7112676056338029,
+          "rumour_f1": 0.5153061224489796,
+          "non_rumour_f1": 0.7470039946737683
+        },
+        {
+          "fold_idx": 3,
+          "test_event": "ottawashooting",
+          "accuracy": 0.6921348314606741,
+          "macro_f1": 0.6815850499310576,
+          "rumour_precision": 0.8798449612403101,
+          "rumour_recall": 0.4829787234042553,
+          "rumour_f1": 0.6236263736263736,
+          "non_rumour_f1": 0.7395437262357415
+        },
+        {
+          "fold_idx": 4,
+          "test_event": "germanwings-crash",
+          "accuracy": 0.5970149253731343,
+          "macro_f1": 0.549718831436017,
+          "rumour_precision": 0.810126582278481,
+          "rumour_recall": 0.2689075630252101,
+          "rumour_f1": 0.4037854889589905,
+          "non_rumour_f1": 0.6956521739130435
+        }
+      ],
+      "elapsed_seconds": 1976.54,
+      "timestamp": "2026-11-04 05:41:31",
+      "delta_mean_loeo_accuracy": -2.1839892778713677,
+      "delta_mean_loeo_macro_f1": -2.2198953824878243,
+      "delta_pooled_accuracy": -1.4477766287487093,
+      "delta_pooled_macro_f1": -1.6467867013048587
+    },
+    "source_only": {
+      "variant_key": "source_only",
+      "display_name": "Source User Only",
+      "category": "feature",
+      "description": "Chỉ dùng thông tin user của tweet gốc (root node), đặt toàn bộ user phản hồi về 0",
+      "feature_group": "source_only",
+      "user_input_dim": 12,
+      "model_component": "full",
+      "events_mode": "5",
+      "num_folds": 5,
+      "mean_loeo": {
+        "accuracy": 0.7020589382308698,
+        "accuracy_std": 0.09694695184976714,
+        "macro_f1": 0.6475202061646324,
+        "macro_f1_std": 0.13733253682972452
+      },
+      "pooled": {
+        "accuracy": 0.7344019303688384,
+        "macro_f1": 0.7015485797433765,
+        "macro_precision": 0.7034054057330593,
+        "macro_recall": 0.6999319454080363,
+        "class_metrics": {
+          "Non-rumour": {
+            "precision": 0.7936874518860662,
+            "recall": 0.8075718015665796,
+            "f1": 0.800569431862301
+          },
+          "Rumour": {
+            "precision": 0.6131233595800525,
+            "recall": 0.592292089249493,
+            "f1": 0.602527727624452
+          }
+        }
+      },
+      "folds": [
+        {
+          "fold_idx": 0,
+          "test_event": "charliehebdo",
+          "accuracy": 0.7782587782587782,
+          "macro_f1": 0.7191137487636003,
+          "rumour_precision": 0.49775112443778113,
+          "rumour_recall": 0.7248908296943232,
+          "rumour_f1": 0.5902222222222222,
+          "non_rumour_f1": 0.8480052753049786
+        },
+        {
+          "fold_idx": 1,
+          "test_event": "sydneysiege",
+          "accuracy": 0.7207207207207207,
+          "macro_f1": 0.7070242656449552,
+          "rumour_precision": 0.7080459770114943,
+          "rumour_recall": 0.5900383141762452,
+          "rumour_f1": 0.6436781609195402,
+          "non_rumour_f1": 0.7703703703703704
+        },
+        {
+          "fold_idx": 2,
+          "test_event": "ferguson",
+          "accuracy": 0.7445319335083115,
+          "macro_f1": 0.6794580224812337,
+          "rumour_precision": 0.4883720930232558,
+          "rumour_recall": 0.5915492957746479,
+          "rumour_f1": 0.535031847133758,
+          "non_rumour_f1": 0.8238841978287093
+        },
+        {
+          "fold_idx": 3,
+          "test_event": "ottawashooting",
+          "accuracy": 0.755056179775281,
+          "macro_f1": 0.7548469594048197,
+          "rumour_precision": 0.7825112107623319,
+          "rumour_recall": 0.7425531914893617,
+          "rumour_f1": 0.7620087336244541,
+          "non_rumour_f1": 0.7476851851851852
+        },
+        {
+          "fold_idx": 4,
+          "test_event": "germanwings-crash",
+          "accuracy": 0.511727078891258,
+          "macro_f1": 0.37715803452855245,
+          "rumour_precision": 0.8461538461538461,
+          "rumour_recall": 0.046218487394957986,
+          "rumour_f1": 0.08764940239043825,
+          "non_rumour_f1": 0.6666666666666666
+        }
+      ],
+      "elapsed_seconds": 1622.41,
+      "timestamp": "2026-11-03 17:23:34",
+      "delta_mean_loeo_accuracy": -2.345232970878519,
+      "delta_mean_loeo_macro_f1": -3.857286572476093,
+      "delta_pooled_accuracy": -1.792485349879347,
+      "delta_pooled_macro_f1": -0.8701086603947084
+    },
+    "without_counts": {
+      "variant_key": "without_counts",
+      "display_name": "w/o Raw Counts",
+      "category": "feature",
+      "description": "Loại bỏ nhóm Engagement Counts (followers, friends, statuses, favourites, listed; còn 7 đặc trưng)",
+      "feature_group": "no_counts",
+      "user_input_dim": 7,
+      "model_component": "full",
+      "events_mode": "5",
+      "num_folds": 5,
+      "mean_loeo": {
+        "accuracy": 0.7103832007403771,
+        "accuracy_std": 0.07501710719787558,
+        "macro_f1": 0.6734381909528547,
+        "macro_f1_std": 0.07397051149939446
+      },
+      "pooled": {
+        "accuracy": 0.7421578765942778,
+        "macro_f1": 0.7059482670655386,
+        "macro_precision": 0.7119160508414608,
+        "macro_recall": 0.7017475730726251,
+        "class_metrics": {
+          "Non-rumour": {
+            "precision": 0.7911676646706587,
+            "recall": 0.8279373368146214,
+            "f1": 0.8091349834141363
+          },
+          "Rumour": {
+            "precision": 0.632664437012263,
+            "recall": 0.5755578093306288,
+            "f1": 0.602761550716941
+          }
+        }
+      },
+      "folds": [
+        {
+          "fold_idx": 0,
+          "test_event": "charliehebdo",
+          "accuracy": 0.8210678210678211,
+          "macro_f1": 0.7662203402946384,
+          "rumour_precision": 0.5700325732899023,
+          "rumour_recall": 0.7641921397379913,
+          "rumour_f1": 0.6529850746268657,
+          "non_rumour_f1": 0.8794556059624109
+        },
+        {
+          "fold_idx": 1,
+          "test_event": "sydneysiege",
+          "accuracy": 0.6986076986076986,
+          "macro_f1": 0.6664726840855106,
+          "rumour_precision": 0.740625,
+          "rumour_recall": 0.4540229885057471,
+          "rumour_f1": 0.5629453681710214,
+          "non_rumour_f1": 0.77
+        },
+        {
+          "fold_idx": 2,
+          "test_event": "ferguson",
+          "accuracy": 0.7279090113735783,
+          "macro_f1": 0.6731057314297537,
+          "rumour_precision": 0.46547314578005117,
+          "rumour_recall": 0.6408450704225352,
+          "rumour_f1": 0.5392592592592592,
+          "non_rumour_f1": 0.8069522036002483
+        },
+        {
+          "fold_idx": 3,
+          "test_event": "ottawashooting",
+          "accuracy": 0.7179775280898877,
+          "macro_f1": 0.7174349432504532,
+          "rumour_precision": 0.7874015748031497,
+          "rumour_recall": 0.6382978723404256,
+          "rumour_f1": 0.7050528789659224,
+          "non_rumour_f1": 0.7298170075349839
+        },
+        {
+          "fold_idx": 4,
+          "test_event": "germanwings-crash",
+          "accuracy": 0.5863539445628998,
+          "macro_f1": 0.5439572557039176,
+          "rumour_precision": 0.75,
+          "rumour_recall": 0.2773109243697479,
+          "rumour_f1": 0.4049079754601227,
+          "non_rumour_f1": 0.6830065359477124
+        }
+      ],
+      "elapsed_seconds": 15669.66,
+      "timestamp": "2026-11-04 04:46:29",
+      "delta_mean_loeo_accuracy": -1.512806719927795,
+      "delta_mean_loeo_macro_f1": -1.2654880936538548,
+      "delta_pooled_accuracy": -1.0168907273354066,
+      "delta_pooled_macro_f1": -0.4301399281784968
+    },
+    "without_profile": {
+      "variant_key": "without_profile",
+      "display_name": "w/o Profile Features",
+      "category": "feature",
+      "description": "Loại bỏ nhóm Profile & Verification (verified, avatar, bio, age; còn 8 đặc trưng)",
+      "feature_group": "no_profile",
+      "user_input_dim": 8,
+      "model_component": "full",
+      "events_mode": "5",
+      "num_folds": 5,
+      "mean_loeo": {
+        "accuracy": 0.7087647968503269,
+        "accuracy_std": 0.05797714115187669,
+        "macro_f1": 0.6799640493930869,
+        "macro_f1_std": 0.05541973176701353
+      },
+      "pooled": {
+        "accuracy": 0.728886590830748,
+        "macro_f1": 0.7006130569970622,
+        "macro_precision": 0.6989961601434206,
+        "macro_recall": 0.7025194763238869,
+        "class_metrics": {
+          "Non-rumour": {
+            "precision": 0.8005326231691079,
+            "recall": 0.7848563968668407,
+            "f1": 0.7926170072511536
+          },
+          "Rumour": {
+            "precision": 0.5974596971177333,
+            "recall": 0.6201825557809331,
+            "f1": 0.6086091067429709
+          }
+        }
+      },
+      "folds": [
+        {
+          "fold_idx": 0,
+          "test_event": "charliehebdo",
+          "accuracy": 0.8119288119288119,
+          "macro_f1": 0.7556130245680028,
+          "rumour_precision": 0.5537720706260032,
+          "rumour_recall": 0.7532751091703057,
+          "rumour_f1": 0.6382978723404256,
+          "non_rumour_f1": 0.8729281767955801
+        },
+        {
+          "fold_idx": 1,
+          "test_event": "sydneysiege",
+          "accuracy": 0.6723996723996724,
+          "macro_f1": 0.6195716520124379,
+          "rumour_precision": 0.75,
+          "rumour_recall": 0.3505747126436782,
+          "rumour_f1": 0.47780678851174935,
+          "non_rumour_f1": 0.7613365155131265
+        },
+        {
+          "fold_idx": 2,
+          "test_event": "ferguson",
+          "accuracy": 0.6605424321959755,
+          "macro_f1": 0.6260800647532967,
+          "rumour_precision": 0.3984375,
+          "rumour_recall": 0.7183098591549296,
+          "rumour_f1": 0.5125628140703518,
+          "non_rumour_f1": 0.7395973154362416
+        },
+        {
+          "fold_idx": 3,
+          "test_event": "ottawashooting",
+          "accuracy": 0.7337078651685394,
+          "macro_f1": 0.7334625605436641,
+          "rumour_precision": 0.7606263982102909,
+          "rumour_recall": 0.723404255319149,
+          "rumour_f1": 0.7415485278080698,
+          "non_rumour_f1": 0.7253765932792584
+        },
+        {
+          "fold_idx": 4,
+          "test_event": "germanwings-crash",
+          "accuracy": 0.6652452025586354,
+          "macro_f1": 0.6650929450880328,
+          "rumour_precision": 0.6832579185520362,
+          "rumour_recall": 0.634453781512605,
+          "rumour_f1": 0.6579520697167756,
+          "non_rumour_f1": 0.6722338204592901
+        }
+      ],
+      "elapsed_seconds": 12833.25,
+      "timestamp": "2026-11-03 18:52:07",
+      "delta_mean_loeo_accuracy": -1.674647108932814,
+      "delta_mean_loeo_macro_f1": -0.6129022496306424,
+      "delta_pooled_accuracy": -2.3440193036883827,
+      "delta_pooled_macro_f1": -0.9636609350261338
+    },
     "without_ratios": {
       "variant_key": "without_ratios",
       "display_name": "w/o Derived Ratios",
@@ -57,28 +608,28 @@
       "user_input_dim": 9,
       "model_component": "full",
       "events_mode": "5",
-      "num_folds": 1,
+      "num_folds": 5,
       "mean_loeo": {
-        "accuracy": 0.8133718133718134,
-        "accuracy_std": 0.0,
-        "macro_f1": 0.7380163013118477,
-        "macro_f1_std": 0.0
+        "accuracy": 0.7355403879885163,
+        "accuracy_std": 0.05200071285614582,
+        "macro_f1": 0.7029996296413324,
+        "macro_f1_std": 0.040195555487268476
       },
       "pooled": {
-        "accuracy": 0.8133718133718134,
-        "macro_f1": 0.7380163013118477,
-        "macro_precision": 0.7305481080184637,
-        "macro_recall": 0.747168037412886,
+        "accuracy": 0.7566356428817649,
+        "macro_f1": 0.7255735958650584,
+        "macro_precision": 0.7285993786089047,
+        "macro_recall": 0.7230457475148158,
         "class_metrics": {
           "Non-rumour": {
-            "precision": 0.8919262555626192,
-            "recall": 0.865515114127082,
-            "f1": 0.878522229179712
+            "precision": 0.8081039755351682,
+            "recall": 0.8279373368146214,
+            "f1": 0.8179004384833635
           },
           "Rumour": {
-            "precision": 0.5691699604743083,
-            "recall": 0.62882096069869,
-            "f1": 0.5975103734439835
+            "precision": 0.6490947816826411,
+            "recall": 0.6181541582150102,
+            "f1": 0.6332467532467533
           }
         }
       },
@@ -86,65 +637,246 @@
         {
           "fold_idx": 0,
           "test_event": "charliehebdo",
-          "accuracy": 0.8133718133718134,
-          "macro_f1": 0.7380163013118477,
-          "rumour_precision": 0.5691699604743083,
-          "rumour_recall": 0.62882096069869,
-          "rumour_f1": 0.5975103734439835,
-          "non_rumour_f1": 0.878522229179712
+          "accuracy": 0.8364598364598365,
+          "macro_f1": 0.7645401127233481,
+          "rumour_precision": 0.625,
+          "rumour_recall": 0.6441048034934498,
+          "rumour_f1": 0.6344086021505376,
+          "non_rumour_f1": 0.8946716232961586
+        },
+        {
+          "fold_idx": 1,
+          "test_event": "sydneysiege",
+          "accuracy": 0.7125307125307125,
+          "macro_f1": 0.6794956838174753,
+          "rumour_precision": 0.7785016286644951,
+          "rumour_recall": 0.4578544061302682,
+          "rumour_f1": 0.5765983112183354,
+          "non_rumour_f1": 0.782393056416615
+        },
+        {
+          "fold_idx": 2,
+          "test_event": "ferguson",
+          "accuracy": 0.7042869641294838,
+          "macro_f1": 0.6491827394573391,
+          "rumour_precision": 0.43349753694581283,
+          "rumour_recall": 0.6197183098591549,
+          "rumour_f1": 0.5101449275362319,
+          "non_rumour_f1": 0.7882205513784462
+        },
+        {
+          "fold_idx": 3,
+          "test_event": "ottawashooting",
+          "accuracy": 0.7314606741573034,
+          "macro_f1": 0.7298368301328906,
+          "rumour_precision": 0.7361963190184049,
+          "rumour_recall": 0.7659574468085106,
+          "rumour_f1": 0.7507820646506778,
+          "non_rumour_f1": 0.7088915956151035
+        },
+        {
+          "fold_idx": 4,
+          "test_event": "germanwings-crash",
+          "accuracy": 0.6929637526652452,
+          "macro_f1": 0.6919427820756094,
+          "rumour_precision": 0.7303921568627451,
+          "rumour_recall": 0.6260504201680672,
+          "rumour_f1": 0.6742081447963801,
+          "non_rumour_f1": 0.7096774193548387
         }
       ],
-      "elapsed_seconds": 116.9,
-      "timestamp": "2026-10-15 14:16:13",
-      "delta_mean_loeo_accuracy": 11.74,
-      "delta_mean_loeo_macro_f1": 11.18,
-      "delta_pooled_accuracy": 8.98,
-      "delta_pooled_macro_f1": 5.81
+      "elapsed_seconds": 15708.77,
+      "timestamp": "2026-11-04 09:47:32",
+      "delta_mean_loeo_accuracy": 1.002912004886125,
+      "delta_mean_loeo_macro_f1": 1.6906557751939166,
+      "delta_pooled_accuracy": 0.43088590141330263,
+      "delta_pooled_macro_f1": 1.5323929517734869
     },
-    "full": {
-      "variant_key": "full",
-      "display_name": "UC-TTT (Full)",
-      "category": "baseline",
+    "without_temporal_gru": {
+      "variant_key": "without_temporal_gru",
+      "display_name": "w/o Temporal GRU",
+      "category": "model",
+      "description": "Giữ Tree Transformer tĩnh, bỏ chiều động lực học thời gian (Static Tree)",
+      "feature_group": "all",
+      "user_input_dim": 12,
+      "model_component": "without_temporal_gru",
+      "events_mode": "5",
+      "num_folds": 5,
       "mean_loeo": {
-        "accuracy": 0.696007633145944,
-        "accuracy_std": 0.07330515790854039,
-        "macro_f1": 0.6262591939177127,
-        "macro_f1_std": 0.07761967128550723
+        "accuracy": 0.6985442156485638,
+        "accuracy_std": 0.07849277931096602,
+        "macro_f1": 0.6485193120170523,
+        "macro_f1_std": 0.06814309849370336
       },
       "pooled": {
-        "accuracy": 0.7235436056532231,
-        "macro_f1": 0.6799176200617436,
-        "macro_precision": 0.6897721800717467,
-        "macro_recall": 0.6744872073255339,
-        "delta_pooled_accuracy": -0.01706308169596682,
-        "delta_pooled_macro_f1": -0.02024043547028076,
+        "accuracy": 0.7314719062392279,
+        "macro_f1": 0.675030197925834,
+        "macro_precision": 0.7026852491175541,
+        "macro_recall": 0.6663472690777941,
         "class_metrics": {
           "Non-rumour": {
-            "precision": 0.7705396208070004,
-            "recall": 0.8276762402088773,
-            "f1": 0.7980866062437059
+            "precision": 0.7587699316628702,
+            "recall": 0.8697127937336815,
+            "f1": 0.8104622871046229
           },
           "Rumour": {
-            "precision": 0.6090047393364929,
-            "recall": 0.5212981744421906,
-            "f1": 0.5617486338797814
+            "precision": 0.646600566572238,
+            "recall": 0.4629817444219067,
+            "f1": 0.539598108747045
           }
-        },
-        "confusion_matrix": [
-          [
-            3170,
-            660
-          ],
-          [
-            944,
-            1028
-          ]
-        ]
+        }
       },
-      "delta_mean_loeo_accuracy": 0.0,
-      "delta_mean_loeo_macro_f1": 0.0,
-      "delta_pooled_accuracy": 0.0,
-      "delta_pooled_macro_f1": 0.0
+      "folds": [
+        {
+          "fold_idx": 0,
+          "test_event": "charliehebdo",
+          "accuracy": 0.8253968253968254,
+          "macro_f1": 0.7615151376298995,
+          "rumour_precision": 0.5871559633027523,
+          "rumour_recall": 0.6986899563318777,
+          "rumour_f1": 0.638085742771685,
+          "non_rumour_f1": 0.8849445324881141
+        },
+        {
+          "fold_idx": 1,
+          "test_event": "sydneysiege",
+          "accuracy": 0.6584766584766585,
+          "macro_f1": 0.597874684579024,
+          "rumour_precision": 0.7333333333333333,
+          "rumour_recall": 0.3160919540229885,
+          "rumour_f1": 0.44176706827309237,
+          "non_rumour_f1": 0.7539823008849558
+        },
+        {
+          "fold_idx": 2,
+          "test_event": "ferguson",
+          "accuracy": 0.7445319335083115,
+          "macro_f1": 0.6721711456859971,
+          "rumour_precision": 0.48757763975155277,
+          "rumour_recall": 0.5528169014084507,
+          "rumour_f1": 0.5181518151815182,
+          "non_rumour_f1": 0.8261904761904761
+        },
+        {
+          "fold_idx": 3,
+          "test_event": "ottawashooting",
+          "accuracy": 0.6651685393258427,
+          "macro_f1": 0.6481018570116919,
+          "rumour_precision": 0.8839285714285714,
+          "rumour_recall": 0.42127659574468085,
+          "rumour_f1": 0.5706051873198847,
+          "non_rumour_f1": 0.7255985267034991
+        },
+        {
+          "fold_idx": 4,
+          "test_event": "germanwings-crash",
+          "accuracy": 0.5991471215351812,
+          "macro_f1": 0.5629337351786493,
+          "rumour_precision": 0.7604166666666666,
+          "rumour_recall": 0.3067226890756303,
+          "rumour_f1": 0.437125748502994,
+          "non_rumour_f1": 0.6887417218543046
+        }
+      ],
+      "elapsed_seconds": 1381.01,
+      "timestamp": "2026-11-03 17:48:16",
+      "delta_mean_loeo_accuracy": -2.69670522910912,
+      "delta_mean_loeo_macro_f1": -3.7573759872341017,
+      "delta_pooled_accuracy": -2.085487762840399,
+      "delta_pooled_macro_f1": -3.5219468421489597
+    },
+    "without_tree_transformer": {
+      "variant_key": "without_tree_transformer",
+      "display_name": "w/o Tree Transformer",
+      "category": "model",
+      "description": "Chỉ dùng GRU chuỗi thời gian, bỏ cấu trúc cây lan truyền",
+      "feature_group": "all",
+      "user_input_dim": 12,
+      "model_component": "without_tree_transformer",
+      "events_mode": "5",
+      "num_folds": 5,
+      "mean_loeo": {
+        "accuracy": 0.7073350364474238,
+        "accuracy_std": 0.095261662192543,
+        "macro_f1": 0.6448774660465595,
+        "macro_f1_std": 0.09366326862158227
+      },
+      "pooled": {
+        "accuracy": 0.7457773181661496,
+        "macro_f1": 0.6824499275934852,
+        "macro_precision": 0.7293094418257391,
+        "macro_recall": 0.6716477155371017,
+        "class_metrics": {
+          "Non-rumour": {
+            "precision": 0.7580539119000658,
+            "recall": 0.9031331592689295,
+            "f1": 0.8242583104968426
+          },
+          "Rumour": {
+            "precision": 0.7005649717514124,
+            "recall": 0.44016227180527384,
+            "f1": 0.5406415446901277
+          }
+        }
+      },
+      "folds": [
+        {
+          "fold_idx": 0,
+          "test_event": "charliehebdo",
+          "accuracy": 0.8321308321308322,
+          "macro_f1": 0.7399011398420632,
+          "rumour_precision": 0.6422976501305483,
+          "rumour_recall": 0.537117903930131,
+          "rumour_f1": 0.5850178359096314,
+          "non_rumour_f1": 0.8947844437744951
+        },
+        {
+          "fold_idx": 1,
+          "test_event": "sydneysiege",
+          "accuracy": 0.683046683046683,
+          "macro_f1": 0.6400499102271022,
+          "rumour_precision": 0.7436823104693141,
+          "rumour_recall": 0.3946360153256705,
+          "rumour_f1": 0.5156445556946183,
+          "non_rumour_f1": 0.7644552647595861
+        },
+        {
+          "fold_idx": 2,
+          "test_event": "ferguson",
+          "accuracy": 0.7690288713910761,
+          "macro_f1": 0.6791319660068225,
+          "rumour_precision": 0.5393700787401575,
+          "rumour_recall": 0.4823943661971831,
+          "rumour_f1": 0.5092936802973977,
+          "non_rumour_f1": 0.8489702517162472
+        },
+        {
+          "fold_idx": 3,
+          "test_event": "ottawashooting",
+          "accuracy": 0.7044943820224719,
+          "macro_f1": 0.6964367927892877,
+          "rumour_precision": 0.8763636363636363,
+          "rumour_recall": 0.5127659574468085,
+          "rumour_f1": 0.6469798657718121,
+          "non_rumour_f1": 0.7458937198067633
+        },
+        {
+          "fold_idx": 4,
+          "test_event": "germanwings-crash",
+          "accuracy": 0.5479744136460555,
+          "macro_f1": 0.4688675213675214,
+          "rumour_precision": 0.76,
+          "rumour_recall": 0.15966386554621848,
+          "rumour_f1": 0.2638888888888889,
+          "non_rumour_f1": 0.6738461538461539
+        }
+      ],
+      "elapsed_seconds": 174.65,
+      "timestamp": "2026-11-03 17:52:57",
+      "delta_mean_loeo_accuracy": -1.8176231492231243,
+      "delta_mean_loeo_macro_f1": -4.12156058428338,
+      "delta_pooled_accuracy": -0.6549465701482293,
+      "delta_pooled_macro_f1": -2.7799738753838343
     }
   }
 }
