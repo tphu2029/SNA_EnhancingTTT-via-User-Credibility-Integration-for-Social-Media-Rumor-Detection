@@ -1,0 +1,89 @@
+{
+  "variant_key": "without_profile",
+  "display_name": "w/o Profile Features",
+  "category": "feature",
+  "description": "Loại bỏ nhóm Profile & Verification (verified, avatar, bio, age; còn 8 đặc trưng)",
+  "feature_group": "no_profile",
+  "user_input_dim": 8,
+  "model_component": "full",
+  "events_mode": "5",
+  "num_folds": 5,
+  "mean_loeo": {
+    "accuracy": 0.7087647968503269,
+    "accuracy_std": 0.05797714115187669,
+    "macro_f1": 0.6799640493930869,
+    "macro_f1_std": 0.05541973176701353
+  },
+  "pooled": {
+    "accuracy": 0.728886590830748,
+    "macro_f1": 0.7006130569970622,
+    "macro_precision": 0.6989961601434206,
+    "macro_recall": 0.7025194763238869,
+    "class_metrics": {
+      "Non-rumour": {
+        "precision": 0.8005326231691079,
+        "recall": 0.7848563968668407,
+        "f1": 0.7926170072511536
+      },
+      "Rumour": {
+        "precision": 0.5974596971177333,
+        "recall": 0.6201825557809331,
+        "f1": 0.6086091067429709
+      }
+    }
+  },
+  "folds": [
+    {
+      "fold_idx": 0,
+      "test_event": "charliehebdo",
+      "accuracy": 0.8119288119288119,
+      "macro_f1": 0.7556130245680028,
+      "rumour_precision": 0.5537720706260032,
+      "rumour_recall": 0.7532751091703057,
+      "rumour_f1": 0.6382978723404256,
+      "non_rumour_f1": 0.8729281767955801
+    },
+    {
+      "fold_idx": 1,
+      "test_event": "sydneysiege",
+      "accuracy": 0.6723996723996724,
+      "macro_f1": 0.6195716520124379,
+      "rumour_precision": 0.75,
+      "rumour_recall": 0.3505747126436782,
+      "rumour_f1": 0.47780678851174935,
+      "non_rumour_f1": 0.7613365155131265
+    },
+    {
+      "fold_idx": 2,
+      "test_event": "ferguson",
+      "accuracy": 0.6605424321959755,
+      "macro_f1": 0.6260800647532967,
+      "rumour_precision": 0.3984375,
+      "rumour_recall": 0.7183098591549296,
+      "rumour_f1": 0.5125628140703518,
+      "non_rumour_f1": 0.7395973154362416
+    },
+    {
+      "fold_idx": 3,
+      "test_event": "ottawashooting",
+      "accuracy": 0.7337078651685394,
+      "macro_f1": 0.7334625605436641,
+      "rumour_precision": 0.7606263982102909,
+      "rumour_recall": 0.723404255319149,
+      "rumour_f1": 0.7415485278080698,
+      "non_rumour_f1": 0.7253765932792584
+    },
+    {
+      "fold_idx": 4,
+      "test_event": "germanwings-crash",
+      "accuracy": 0.6652452025586354,
+      "macro_f1": 0.6650929450880328,
+      "rumour_precision": 0.6832579185520362,
+      "rumour_recall": 0.634453781512605,
+      "rumour_f1": 0.6579520697167756,
+      "non_rumour_f1": 0.6722338204592901
+    }
+  ],
+  "elapsed_seconds": 12833.25,
+  "timestamp": "2026-11-03 18:52:07"
+}

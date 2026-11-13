@@ -1,0 +1,76 @@
+{
+  "benchmark": "PHEME 5 Events LOEO (Wu et al. 2025 Synchronized)",
+  "config": {
+    "d_model": 768,
+    "nhead": 12,
+    "num_tree_layers": 6,
+    "fc_hidden_dim": 600,
+    "num_time_windows": 8,
+    "learning_rate": 4.2e-05,
+    "patience": 8,
+    "epochs": 35
+  },
+  "pooled": {
+    "ttt_accuracy": 0.7481902792140641,
+    "ttt_macro_f1": 0.7088389361435745,
+    "ucttt_accuracy": 0.7523267838676319,
+    "ucttt_macro_f1": 0.7102496663473236,
+    "delta_accuracy": 0.00413650465356767,
+    "delta_macro_f1": 0.00141073020374904
+  },
+  "mean_loeo": {
+    "ttt_accuracy": 0.725638272076848,
+    "ttt_macro_f1": 0.6858579157120752,
+    "ucttt_accuracy": 0.725511267939655,
+    "ucttt_macro_f1": 0.6860930718893933,
+    "delta_accuracy": -0.00012700413719286984,
+    "delta_macro_f1": 0.00023515617731803217
+  },
+  "per_event": [
+    {
+      "event": "charliehebdo",
+      "ttt_accuracy": 0.8186628186628186,
+      "ttt_macro_f1": 0.7587576890344404,
+      "ucttt_accuracy": 0.8326118326118326,
+      "ucttt_macro_f1": 0.7356778558798169,
+      "delta_accuracy": 0.013949013949013959,
+      "delta_macro_f1": -0.023079833154623516
+    },
+    {
+      "event": "ferguson",
+      "ttt_accuracy": 0.7445319335083114,
+      "ttt_macro_f1": 0.6546970700215197,
+      "ucttt_accuracy": 0.705161854768154,
+      "ucttt_macro_f1": 0.634697874237158,
+      "delta_accuracy": -0.03937007874015748,
+      "delta_macro_f1": -0.0199991957843617
+    },
+    {
+      "event": "germanwings-crash",
+      "ttt_accuracy": 0.6567164179104478,
+      "ttt_macro_f1": 0.6546818192211832,
+      "ucttt_accuracy": 0.6417910447761195,
+      "ucttt_macro_f1": 0.6400087722504477,
+      "delta_accuracy": -0.014925373134328339,
+      "delta_macro_f1": -0.014673046970735442
+    },
+    {
+      "event": "ottawashooting",
+      "ttt_accuracy": 0.7235955056179775,
+      "ttt_macro_f1": 0.7230360531309298,
+      "ucttt_accuracy": 0.7280898876404494,
+      "ucttt_macro_f1": 0.7270090904020969,
+      "delta_accuracy": 0.004494382022471939,
+      "delta_macro_f1": 0.003973037271167215
+    },
+    {
+      "event": "sydneysiege",
+      "ttt_accuracy": 0.6846846846846847,
+      "ttt_macro_f1": 0.6381169471523029,
+      "ucttt_accuracy": 0.7199017199017199,
+      "ucttt_macro_f1": 0.6930717666774469,
+      "delta_accuracy": 0.03521703521703515,
+      "delta_macro_f1": 0.05495481952514389
+    }
+  ]
+}
