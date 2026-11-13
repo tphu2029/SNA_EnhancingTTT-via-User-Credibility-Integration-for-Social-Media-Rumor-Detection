@@ -2,13 +2,16 @@ import os
 import sys
 import json
 import time
+from pathlib import Path
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 if hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(encoding='utf-8')
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.append(str(ROOT))
+
 from src.data.pheme_parser import load_cached_dataset
 from src.baselines.tfidf_lr import TfidfLogisticRegressionBaseline
 from src.baselines.propagation_rf import PropagationRandomForestBaseline
@@ -27,13 +30,17 @@ def print_result_table(res):
     print("=" * 70)
 
 def main():
-    data_path = r"e:\UIT\MXH\PJ\data\processed\pheme_processed.pkl"
-    if not os.path.exists(data_path):
-        print(f"Không tìm thấy file: {data_path}. Vui lòng chạy preprocess_pheme.py trước!")
-        return
+    data_path = ROOT / "data/processed/pheme_processed.pkl"
+    if not data_path.exists():
+        alt_path = Path(r"e:\UIT\MXH\PJ\data\processed\pheme_processed.pkl")
+        if alt_path.exists():
+            data_path = alt_path
+        else:
+            print(f"Không tìm thấy file: {data_path}. Vui lòng chạy preprocess_pheme.py trước!")
+            return
 
     print("Đang tải dữ liệu PHEME đã tiền xử lý...")
-    dataset = load_cached_dataset(data_path)
+    dataset = load_cached_dataset(str(data_path))
     print(f"Đã tải {len(dataset)} threads thành công.\n")
 
     results = {}
@@ -75,8 +82,8 @@ def main():
     results["baseline2b_tabular_xgboost_9events"] = res_b2b_9
 
     # Lưu kết quả JSON
-    out_json = r"e:\UIT\MXH\PJ\results\baseline_results.json"
-    os.makedirs(os.path.dirname(out_json), exist_ok=True)
+    out_json = ROOT / "results/baseline_results.json"
+    out_json.parent.mkdir(parents=True, exist_ok=True)
     with open(out_json, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
     print(f"\nĐã lưu toàn bộ kết quả Baselines vào: {out_json}")
