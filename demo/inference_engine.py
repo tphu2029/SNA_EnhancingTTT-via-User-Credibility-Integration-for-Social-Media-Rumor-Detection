@@ -525,7 +525,7 @@ class RumorDetectionDemoEngine:
 
         if variant_key == "ttt_baseline":
             with torch.no_grad():
-                logits, _ = model_ttt(
+                logits = model_ttt(
                     text_features=inputs["text_features"],
                     depths=inputs["depths"],
                     time_window_assignments=inputs["time_window_assignments"],
@@ -551,7 +551,7 @@ class RumorDetectionDemoEngine:
                 u_feat[:, :, [9, 10, 11]] = 0.0
 
             with torch.no_grad():
-                logits, _ = model_uc(
+                logits = model_uc(
                     text_features=inputs["text_features"],
                     depths=inputs["depths"],
                     user_features=u_feat,
