@@ -468,6 +468,45 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
+    # Mở rộng: So sánh trực tiếp thêm một biến thể bóc tách trên Tweet này
+    with st.expander("So sánh trực tiếp thêm 1 mô hình bóc tách (Ablation Variant) trên luồng Tweet này"):
+        col_ab_sel, col_ab_out = st.columns([1, 2])
+        with col_ab_sel:
+            abl_variants_keys = [
+                ("counts_only", "Counts Only (5 đặc trưng đếm thô - Peak F1 70.46%)"),
+                ("source_only", "Source User Only (Chỉ dùng user nguồn - Thảm họa Germanwings)"),
+                ("profile_only", "Profile Only (4 đặc trưng hồ sơ/xác minh)"),
+                ("ratios_only", "Ratios Only (3 đặc trưng tỷ lệ phái sinh)"),
+                ("without_counts", "w/o Raw Counts (Loại trừ 5 counts)"),
+                ("without_profile", "w/o Profile (Loại trừ 4 profile)"),
+                ("without_ratios", "w/o Derived Ratios (Loại trừ 3 ratios)"),
+            ]
+            chosen_abl_key = st.selectbox(
+                "Chọn biến thể bóc tách để suy luận đối chứng:",
+                options=[k for k, _ in abl_variants_keys],
+                format_func=lambda k: next(lbl for (code, lbl) in abl_variants_keys if code == k),
+                index=0,
+                key="select_ablation_pred"
+            )
+        with col_ab_out:
+            res_abl = engine.predict_ablation_variant(selected_thread, chosen_abl_key, fold_idx=active_fold)
+            is_r_abl = res_abl["label"] == 1
+            c_tag_abl = "#dc2626" if is_r_abl else "#16a34a"
+            st.markdown(f"""
+            <div style="background: #faf5ff; border: 1px solid #d8b4fe; border-radius: 8px; padding: 12px 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 600; color: #6b21a8;">Kết quả biến thể: <code>{chosen_abl_key}</code></span>
+                    <span style="background: {c_tag_abl}20; color: {c_tag_abl}; padding: 3px 12px; border-radius: 12px; font-weight: bold;">
+                        {res_abl['label_name']}
+                    </span>
+                </div>
+                <div style="display: flex; gap: 20px; margin-top: 8px; font-size: 13.5px;">
+                    <span>Xác suất Tin đồn: <b style="color: #dc2626;">{res_abl['prob_rumour']*100:.2f}%</b></span>
+                    <span>Xác suất Tin xác thực: <b style="color: #16a34a;">{res_abl['prob_non_rumour']*100:.2f}%</b></span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
     # =========================================================================
     # MỤC 3: TRỌNG SỐ GIẢI THÍCH CỦA USER CREDIBILITY (GATE ALPHA & INTERPRET)
     # =========================================================================
@@ -606,6 +645,132 @@ def main():
                 • TTT Gốc: <b>{p_ttt:.1f}%</b>
             </div>
             """, unsafe_allow_html=True)
+
+    # =========================================================================
+    # MỤC 5: BẢNG BÓC TÁCH ĐA MÔ HÌNH (COMPREHENSIVE MULTI-MODEL ABLATION BENCHMARK)
+    # =========================================================================
+    st.markdown("---")
+    st.subheader("5. Bảng Bóc Tách Đa Mô Hình (Multi-Model Ablation Benchmark — Toàn Bộ 11 Biến Thể)")
+    st.markdown("""
+    Nghiên cứu tiến hành bóc tách toàn diện **10 biến thể mô hình** theo chuẩn đánh giá **5-Fold Leave-One-Event-Out (LOEO)** 
+    để kiểm chứng giả thuyết $H_2$ (Ablation Hypothesis), bóc tách vai trò của từng nhóm đặc trưng uy tín người dùng cũng như hai khối kiến trúc cốt lõi (Tree Transformer & Temporal BiGRU).
+    """)
+
+    abl_benchmark = engine.get_ablation_benchmark_data()
+    all_models = abl_benchmark["models"]
+    trade_off = abl_benchmark["trade_off"]
+
+    # Huy hiệu số liệu trọng tâm
+    col_b1, col_b2, col_b3, col_b4 = st.columns(4)
+    with col_b1:
+        st.metric(label="Mô hình Đạt F1 Cao Nhất", value="Counts Only (70.46%)", delta="+1.86% so với Full")
+    with col_b2:
+        st.metric(label="UC-TTT Đề Xuất (Full 12)", value="68.61% Mean LOEO", delta="71.02% Pooled F1")
+    with col_b3:
+        st.metric(label="TTT Baseline Gốc", value="68.59% Mean LOEO", delta="70.88% Pooled F1")
+    with col_b4:
+        st.metric(label="Tổn thất Bỏ Tree Transformer", value="-4.12% Macro F1", delta="Rớt xuống 64.49%", delta_color="inverse")
+
+    tab_tbl, tab_folds, tab_tradeoff = st.tabs([
+        "Bảng Tổng Hợp 11 Biến Thể (Overview)",
+        "So Sánh 5 Folds Sự Kiện (Cross-Event Benchmark)",
+        "Ma Trận Chi Phí & Tính Khả Thi (Trade-off Matrix)"
+    ])
+
+    with tab_tbl:
+        st.markdown("#### Bảng Tổng Hợp So Sánh Toàn Diện 11 Biến Thể (5-Fold LOEO Benchmark)")
+        tbl_data = []
+        for m in all_models:
+            tbl_data.append({
+                "Tên Mô Hình": m["name"],
+                "Phân Nhóm": m["category"],
+                "Số Đặc Trưng": m["features_count"],
+                "Mean LOEO F1 (%)": f"{m['mean_f1']:.2f}% ± {m['f1_std']:.2f}%",
+                "Chênh Lệch dF1": m["delta_f1"],
+                "Pooled F1 (%)": f"{m['pooled_f1']:.2f}%",
+                "Mean Acc (%)": f"{m['accuracy']:.2f}%",
+                "VRAM GPU": m["vram"],
+                "Tốc Độ": m["speed"],
+            })
+        st.dataframe(pd.DataFrame(tbl_data), use_container_width=True, hide_index=True)
+        st.caption("Ghi chú: Delta Macro F1 (dF1) được tính tương đối so với UC-TTT Full (12 đặc trưng, Mean LOEO F1 = 68.61%).")
+
+    with tab_folds:
+        st.markdown("#### Phân Rã Hiệu Năng Chi Tiết Qua 5 Folds Sự Kiện (Charlie Hebdo, Sydney Siege, Ferguson, Ottawa Shooting, Germanwings)")
+        
+        ablation_selectable = [m for m in all_models if m["id"] not in ["full", "ttt_baseline"]]
+        selected_abl_id = st.selectbox(
+            "Chọn biến thể bóc tách để phân tích chuyên sâu:",
+            options=[m["id"] for m in ablation_selectable],
+            format_func=lambda x: next(m["name"] for m in ablation_selectable if m["id"] == x),
+            index=0
+        )
+        target_model = next(m for m in all_models if m["id"] == selected_abl_id)
+        full_model = next(m for m in all_models if m["id"] == "full")
+        ttt_model = next(m for m in all_models if m["id"] == "ttt_baseline")
+
+        # Chuẩn bị dữ liệu vẽ biểu đồ 5 events
+        events_order = ["charliehebdo", "sydneysiege", "ferguson", "ottawashooting", "germanwings-crash"]
+        event_labels = {
+            "charliehebdo": "Charlie Hebdo (CH)",
+            "sydneysiege": "Sydney Siege (SS)",
+            "ferguson": "Ferguson (FG)",
+            "ottawashooting": "Ottawa Shoot. (OS)",
+            "germanwings-crash": "Germanwings (GC)",
+        }
+        
+        chart_rows = []
+        for ev in events_order:
+            lbl = event_labels.get(ev, ev)
+            f_val = target_model["event_f1"].get(ev, 0.0) * 100.0
+            full_val = full_model["event_f1"].get(ev, 0.0) * 100.0
+            ttt_val = ttt_model["event_f1"].get(ev, 0.0) * 100.0
+            chart_rows.append({"Sự kiện": lbl, "Mô hình": target_model["name"], "Macro F1 (%)": f_val})
+            chart_rows.append({"Sự kiện": lbl, "Mô hình": "UC-TTT Full (Proposed)", "Macro F1 (%)": full_val})
+            chart_rows.append({"Sự kiện": lbl, "Mô hình": "TTT Baseline (Wu 2025)", "Macro F1 (%)": ttt_val})
+
+        df_chart_folds = pd.DataFrame(chart_rows)
+        bar_chart = alt.Chart(df_chart_folds).mark_bar().encode(
+            x=alt.X("Mô hình:N", title=None, axis=alt.Axis(labels=False)),
+            y=alt.Y("Macro F1 (%):Q", scale=alt.Scale(domain=[0, 100]), title="Macro F1 (%)"),
+            color=alt.Color("Mô hình:N", scale=alt.Scale(
+                domain=[target_model["name"], "UC-TTT Full (Proposed)", "TTT Baseline (Wu 2025)"],
+                range=["#8b5cf6", "#2563eb", "#ea580c"]
+            )),
+            column=alt.Column("Sự kiện:N", title="5 Sự Kiện Thực Nghiệm Benchmark PHEME")
+        ).properties(width=130, height=300)
+
+        st.altair_chart(bar_chart)
+
+        st.markdown(f"""
+        <div class="ui-card">
+            <h4 style="margin: 0 0 8px 0; color: #1e3a8a;">Phân Tích Chuyên Sâu: {target_model['name']}</h4>
+            <p style="margin: 4px 0;"><b>Phân nhóm:</b> {target_model['category']} | <b>Số đặc trưng đầu vào:</b> {target_model['features_count']} | <b>Mean LOEO F1:</b> {target_model['mean_f1']:.2f}% (Chênh lệch: <b>{target_model['delta_f1']}</b>)</p>
+            <p style="margin: 4px 0;"><b>Mô tả biến thể:</b> {target_model['description']}</p>
+            <div class="metric-callout">
+                <b>Nhận xét cốt lõi & Cơ chế hoạt động:</b> {target_model['key_insight']}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with tab_tradeoff:
+        st.markdown("#### Ma Trận Chi Phí Tính Toán & Tính Khả Thi Triển Khai Thực Tế")
+        if trade_off:
+            df_trade = pd.DataFrame([
+                {
+                    "Mô hình": r.get("model", ""),
+                    "Dữ liệu Crawl / Thread": r.get("data_crawled_per_thread", ""),
+                    "Bộ nhớ GPU VRAM": r.get("vram_footprint", ""),
+                    "Thời gian huấn luyện": r.get("relative_training_time", ""),
+                    "Mean LOEO F1": r.get("mean_loeo_f1", ""),
+                    "Nguy cơ Thất bại (Failure Mode)": r.get("failure_mode", ""),
+                    "Đánh giá Khả thi Thực tế": r.get("practical_viability", ""),
+                }
+                for r in trade_off
+            ])
+            st.dataframe(df_trade, use_container_width=True, hide_index=True)
+        else:
+            st.info("Dữ liệu ma trận chi phí đang được tổng hợp từ error_analysis_report.json.")
 
     # Footer
     st.markdown("---")
