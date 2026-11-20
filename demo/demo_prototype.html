@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ Thống Phán Đoán Tin Đồn: UC-TTT vs. Baseline TTT (Wu et al. 2025)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --background: #f8fafc;
+      --card: #ffffff;
+      --foreground: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #090d16;
+        --card: #111827;
+        --foreground: #f8fafc;
+        --muted: #94a3b8;
+        --border: #1f2937;
+        --primary: #3b82f6;
+      }
+    }
+    body {
+      background-color: var(--background);
+      color: var(--foreground);
+    }
+    .case-btn-active {
+      border-color: #2563eb !important;
+      background-color: rgba(37, 99, 235, 0.1) !important;
+      color: #2563eb !important;
+    }
+  </style>
+</head>
+<body class="p-3 sm:p-6 antialiased font-sans">
+  <div class="max-w-6xl mx-auto space-y-6">
+    
+    <!-- HEADER -->
+    <header class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-3">
+      <div class="flex flex-wrap gap-2 text-xs font-semibold">
+        <span class="px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">PROTOTYPE SYSTEM</span>
+        <span class="px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">PHEME BENCHMARK (5-FOLD LOEO)</span>
+      </div>
+      <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Hệ Thống Phán Đoán Tin Đồn: UC-TTT vs. Baseline TTT</h1>
+      <p class="text-xs sm:text-sm text-[var(--muted)] leading-relaxed">
+        Tái hiện mô hình cơ sở <b>Temporal Tree Transformer (Wu et al., PLOS ONE 2025)</b> và đánh giá đối chứng với mô hình đề xuất <b>UC-TTT</b> (tích hợp 12 đặc trưng độ uy tín người dùng qua cơ chế cổng động Residual Gate).
+      </p>
+      <div class="flex flex-wrap gap-2 pt-1 text-xs">
+        <span class="px-2.5 py-1 rounded bg-[var(--background)] border border-[var(--border)]">BERT-base (768-d)</span>
+        <span class="px-2.5 py-1 rounded bg-[var(--background)] border border-[var(--border)]">Tree Transformer (6L/12H)</span>
+        <span class="px-2.5 py-1 rounded bg-[var(--background)] border border-[var(--border)]">Temporal BiGRU (Cumulative)</span>
+        <span class="px-2.5 py-1 rounded bg-[var(--background)] border border-[var(--border)]">12 User Credibility Features</span>
+        <span class="px-2.5 py-1 rounded bg-[var(--background)] border border-[var(--border)]">PyTorch 2.12 + CUDA</span>
+      </div>
+    </header>
+
+    <!-- CASE SELECTOR -->
+    <section class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm space-y-3">
+      <div class="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Chọn Ca Thực Nghiệm Đối Chiếu (Dữ liệu thực tế từ PHEME 5 Folds):</div>
+      <div id="case-buttons" class="grid grid-cols-1 sm:grid-cols-5 gap-2"></div>
+      <div id="case-summary-box" class="p-3 text-xs sm:text-sm rounded-lg bg-blue-500/5 border border-blue-500/20 text-[var(--foreground)]"></div>
+    </section>
+
+    <!-- IMPACT BANNER -->
+    <div id="verdict-banner" class="border rounded-xl p-4 shadow-sm space-y-1">
+      <h2 id="verdict-title" class="text-base sm:text-lg font-bold"></h2>
+      <p id="verdict-desc" class="text-xs sm:text-sm text-[var(--muted)]"></p>
+    </div>
+
+    <!-- SECTION 1: INPUT BÀI BÁO -->
+    <section class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
+      <h3 class="text-base font-bold flex items-center gap-2">1. Đầu Vào Mô Hình (Source Tweet & Cascade — Chuẩn Bài Báo)</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Author Profile -->
+        <div class="border border-[var(--border)] rounded-lg p-4 bg-[var(--background)] space-y-2">
+          <h4 class="font-bold text-xs uppercase tracking-wide text-blue-600 dark:text-blue-400">Hồ Sơ Tác Giả (Author Profile)</h4>
+          <div class="flex items-center gap-2">
+            <span id="author-name" class="font-bold text-sm"></span>
+            <span id="author-verified" class="text-blue-500 font-bold">(Verified)</span>
+          </div>
+          <div id="author-handle" class="text-xs text-[var(--muted)]"></div>
+          <div class="text-xs space-y-1 pt-1">
+            <div class="flex justify-between"><span>Xác minh:</span><b id="author-verified-text"></b></div>
+            <div class="flex justify-between"><span>Followers:</span><b id="author-followers"></b></div>
+            <div class="flex justify-between"><span>Following:</span><b id="author-friends"></b></div>
+            <div class="flex justify-between"><span>Tỷ lệ uy tín:</span><b id="author-rep"></b></div>
+            <div class="flex justify-between"><span>Số bài đăng:</span><b id="author-statuses"></b></div>
+          </div>
+          <div class="pt-2 border-t border-[var(--border)]">
+            <div class="flex justify-between text-xs font-semibold mb-1">
+              <span>Điểm uy tín tài khoản:</span>
+              <span id="author-score-val"></span>
+            </div>
+            <div class="w-full bg-[var(--border)] h-2 rounded-full overflow-hidden">
+              <div id="author-score-bar" class="h-full bg-emerald-500 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Source Claim -->
+        <div class="md:col-span-2 border border-[var(--border)] rounded-lg p-4 bg-[var(--background)] space-y-3">
+          <h4 class="font-bold text-xs uppercase tracking-wide text-blue-600 dark:text-blue-400">Nội Dung Tuyên Bố (Source Claim)</h4>
+          <p id="claim-text" class="text-sm sm:text-base italic p-3 rounded-lg border-l-4 border-blue-500 bg-[var(--card)]"></p>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-[var(--muted)]">
+            <div><b>Thời điểm:</b> <span id="meta-time"></span></div>
+            <div><b>Sự kiện:</b> <span id="meta-event"></span></div>
+            <div><b>Nhãn thực tế:</b> <span id="meta-ground-truth" class="font-bold"></span></div>
+            <div><b>Tổng số nodes:</b> <span id="meta-nodes"></span></div>
+            <div><b>Số phản hồi:</b> <span id="meta-reactions"></span></div>
+            <div><b>Số lát cắt (Windows):</b> <span id="meta-windows"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expandable Cascade Details -->
+      <details class="text-xs border border-[var(--border)] rounded-lg bg-[var(--background)]">
+        <summary class="p-3 font-semibold cursor-pointer hover:bg-slate-500/5">Xem Chi Tiết Cây Phản Hồi Lan Truyền (Propagation Cascade Details)</summary>
+        <div class="p-3 border-t border-[var(--border)] overflow-x-auto max-h-60">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="border-b border-[var(--border)] text-[var(--muted)]">
+                <th class="p-1">Thời điểm</th>
+                <th class="p-1">Tác giả</th>
+                <th class="p-1">Xác minh</th>
+                <th class="p-1">Followers</th>
+                <th class="p-1">Nội dung phản hồi</th>
+              </tr>
+            </thead>
+            <tbody id="reactions-table-body" class="divide-y divide-[var(--border)]"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <!-- SECTION 2: SO SÁNH ĐỐI ĐẦU -->
+    <section class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
+      <h3 class="text-base font-bold flex items-center gap-2">2. So Sánh Đối Đầu Song Song (Head-to-Head: TTT Baseline vs. UC-TTT Proposed)</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- TTT Baseline -->
+        <div class="border border-[var(--border)] rounded-lg p-4 bg-[var(--background)] space-y-3">
+          <div class="text-center pb-2 border-b border-[var(--border)]">
+            <h4 class="font-bold text-sm text-[var(--muted)]">Baseline: TTT Gốc (Wu et al. 2025)</h4>
+            <div class="text-[11px] text-[var(--muted)]">Chỉ dùng Văn bản BERT 768-d + Cây lan truyền (KHÔNG CÓ User)</div>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-xs text-[var(--muted)]">Phán đoán:</span>
+            <span id="ttt-pred-label" class="px-3 py-1 rounded-full text-xs font-bold"></span>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div>
+              <div class="flex justify-between mb-1"><span>Xác suất Tin đồn P(Rumour):</span><b id="ttt-p-rumour" class="text-rose-600"></b></div>
+              <div class="w-full bg-[var(--border)] h-2.5 rounded-full overflow-hidden">
+                <div id="ttt-bar-rumour" class="h-full bg-rose-500 rounded-full"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1"><span>Xác suất Tin xác thực P(Non-rumour):</span><b id="ttt-p-non" class="text-emerald-600"></b></div>
+              <div class="w-full bg-[var(--border)] h-2.5 rounded-full overflow-hidden">
+                <div id="ttt-bar-non" class="h-full bg-emerald-500 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+          <div id="ttt-correct-badge" class="text-center text-xs font-bold pt-2"></div>
+        </div>
+
+        <!-- UC-TTT Proposed -->
+        <div class="border border-blue-500/30 rounded-lg p-4 bg-[var(--background)] space-y-3 ring-1 ring-blue-500/20">
+          <div class="text-center pb-2 border-b border-blue-500/20">
+            <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">Đề Xuất: UC-TTT (Nhóm 6)</h4>
+            <div class="text-[11px] text-[var(--muted)]">Tích hợp 12 đặc trưng User Credibility qua Cổng Residual Gate</div>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-xs text-[var(--muted)]">Phán đoán:</span>
+            <span id="ttt-pred-label" class="px-3 py-1 rounded-full text-xs font-bold"></span>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div>
+              <div class="flex justify-between mb-1"><span>Xác suất Tin đồn P(Rumour):</span><b id="ttt-p-rumour" class="text-rose-600"></b></div>
+              <div class="w-full bg-[var(--border)] h-2.5 rounded-full overflow-hidden">
+                <div id="ttt-bar-rumour" class="h-full bg-rose-500 rounded-full"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1"><span>Xác suất Tin xác thực P(Non-rumour):</span><b id="ttt-p-non" class="text-emerald-600"></b></div>
+              <div class="w-full bg-[var(--border)] h-2.5 rounded-full overflow-hidden">
+                <div id="ttt-bar-non" class="h-full bg-emerald-500 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+          <div id="ttt-correct-badge" class="text-center text-xs font-bold pt-2"></div>
+        </div>
+
+        <!-- UC-TTT Proposed -->
+        <div class="border border-blue-500/30 rounded-lg p-4 bg-[var(--background)] space-y-3 ring-1 ring-blue-500/20">
+          <div class="text-center pb-2 border-b border-blue-500/20">
+            <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">Đề Xuất: UC-TTT (Nhóm 6)</h4>
+            <div class="text-[11px] text-[var(--muted)]">Tích hợp 12 đặc trưng User Credibility qua Cổng Residual Gate</div>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-xs text-[var(--muted)]">Phán đoán:</span>
+            <span id="uc-pred-label" class="px-3 py-1 rounded-full text-xs font-bold"></span>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div>
+              <div class="flex justify-between mb-1"><span>Xác suất Tin đồn P(Rumour):</span><b id="uc-p-rumour" class="text-rose-600"></b></div>
+              <div class="w-full bg-[var(--border)] h-2.5 rounded-full overflow-hidden">
+                <div id="uc-bar-rumour" class="h-full bg-rose-500 rounded-full"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1"><span>Xác suất Tin xác thực P(Non-rumour):</span><b id="uc-p-non" class="text-emerald-600"></b></div>
+              <div class="w-full bg-[var(--border)] h-2.5 rounded-full overflow-hidden">
+                <div id="uc-bar-non" class="h-full bg-emerald-500 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+          <div id="uc-correct-badge" class="text-center text-xs font-bold pt-2"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: TRỌNG SỐ GIẢI THÍCH -->
+    <section class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
+      <h3 class="text-base font-bold flex items-center gap-2">3. Trọng Số Giải Thích Của User Credibility (Residual Gate α)</h3>
+      <div class="border border-[var(--border)] rounded-lg p-4 bg-[var(--background)] space-y-3">
+        <div class="text-xs text-[var(--muted)]">
+          Cơ chế Residual Gate học trọng số <b>α ∈ [0, 1]</b> để quyết định tỷ lệ dung hòa giữa <b>Độ uy tín người dùng</b> và <b>Ngữ nghĩa cấu trúc văn bản lan truyền</b>:
+        </div>
+        
+        <div class="space-y-2">
+          <div class="flex justify-between text-xs font-bold">
+            <span class="text-emerald-600 dark:text-emerald-400">Trọng số Người dùng: <span id="gate-user-pct"></span></span>
+            <span class="text-blue-600 dark:text-blue-400">Trọng số Ngữ nghĩa Văn bản: <span id="gate-text-pct"></span></span>
+          </div>
+          <div class="w-full bg-blue-500 h-3 rounded-full overflow-hidden flex">
+            <div id="gate-user-bar" class="h-full bg-emerald-500 transition-all duration-300"></div>
+            <div id="gate-text-bar" class="h-full bg-blue-500 transition-all duration-300"></div>
+          </div>
+        </div>
+
+        <div id="gate-explanation" class="text-xs p-3 rounded-lg bg-slate-500/10 border border-[var(--border)] text-[var(--foreground)]"></div>
+      </div>
+
+      <!-- 12 Features Breakdown -->
+      <details class="text-xs border border-[var(--border)] rounded-lg bg-[var(--background)]">
+        <summary class="p-3 font-semibold cursor-pointer hover:bg-slate-500/5">Bóc Tách 12 Đặc Trưng Độ Uy Tín Người Dùng Của Tác Giả Gốc</summary>
+        <div class="p-3 border-t border-[var(--border)] overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="border-b border-[var(--border)] text-[var(--muted)]">
+                <th class="p-1">Nhóm</th>
+                <th class="p-1">Tên đặc trưng</th>
+                <th class="p-1">Giá trị gốc</th>
+                <th class="p-1">Log-transform</th>
+                <th class="p-1">Tác động suy luận</th>
+              </tr>
+            </thead>
+            <tbody id="features-table-body" class="divide-y divide-[var(--border)]"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <!-- SECTION 4: DIỄN BIẾN THEO THỜI GIAN -->
+    <section class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
+      <h3 class="text-base font-bold flex items-center gap-2">4. Diễn Biến Cảnh Báo Theo Thời Gian (Early Rumor Detection Timeline)</h3>
+      <p class="text-xs text-[var(--muted)]">
+        Mô hình chia cây lan truyền thành các cửa sổ con tích lũy (Cumulative Subtrees, mỗi lát cắt chứa tối đa 8 bài tweet phản hồi). Đường cong thể hiện xác suất tin đồn <b>P(Rumour)</b> qua từng mốc thời gian:
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- SVG Curve Chart -->
+        <div class="md:col-span-2 border border-[var(--border)] rounded-lg p-3 bg-[var(--background)] flex flex-col justify-between">
+          <div class="flex justify-between items-center text-xs pb-2 border-b border-[var(--border)]">
+            <span class="font-bold">Đường Cong Xác Suất Tin Đồn (%) Theo Thời Gian</span>
+            <div class="flex gap-3 text-[11px]">
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span> UC-TTT</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block"></span> TTT Gốc</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-0.5 bg-red-500 inline-block"></span> Ngưỡng 50%</span>
+            </div>
+          </div>
+          <div id="chart-container" class="w-full h-48 py-2"></div>
+        </div>
+
+        <!-- Milestones list -->
+        <div class="border border-[var(--border)] rounded-lg p-3 bg-[var(--background)] space-y-2 max-h-60 overflow-y-auto text-xs">
+          <div class="font-bold text-xs uppercase tracking-wide text-[var(--muted)]">Chi Tiết Từng Lát Cắt Tích Lũy:</div>
+          <div id="milestones-list" class="space-y-1.5"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="text-center text-xs text-[var(--muted)] pt-4 pb-8 space-y-1">
+      <div>Đồ Án Khai Phá Mạng Xã Hội (SNA) — Đề tài: Cải tiến Temporal Tree Transformer (UC-TTT)</div>
+      <div>Dữ liệu đánh giá: PHEME Dataset | Bài báo tham chiếu: Wu et al. (PLOS ONE 2025)</div>
+    </footer>
+  </div>
+
+  <script>
+    const CASES = [{"thread_id": "553569333150896129", "event": "charliehebdo", "ground_truth": 0, "ground_truth_name": "Non-rumour (Tin xác thực)", "source_tweet": {"id": "553569333150896129", "author_name": "Franci", "screen_name": "LadySandersfarm", "verified": false, "followers_count": 14090, "friends_count": 10498, "reputation_ratio": 1.3420325745309076, "statuses_count": 84706, "credibility_score": 50, "text": "Wake up,it's real. #CharlieHebdo http://t.co/nuA9sHgEOR", "created_at": "Fri Jan 09 15:09:48 +0000 2015", "description": "Conservative lady who loves her country. I am politically incorrect and don't care."}, "num_nodes": 19, "num_reactions": 18, "ttt_prediction": {"label": 1, "label_name": "Rumour (Tin đồn)", "prob_non_rumour": 0.23144744336605072, "prob_rumour": 0.7685525417327881, "is_correct": false}, "ucttt_prediction": {"label": 0, "label_name": "Non-rumour (Tin xác thực)", "prob_non_rumour": 0.7918989658355713, "prob_rumour": 0.20810100436210632, "is_correct": true}, "interpretability": {"gate_root_alpha": 0.4753681719303131, "gate_overall_alpha": 0.47539353370666504, "user_weight_pct": 47.5, "text_weight_pct": 52.5, "explanation_text": "Mô hình phân bổ 47.5% trọng số vào độ uy tín tài khoản và 52.5% vào ngữ nghĩa văn bản. Tài khoản chưa xác minh nên mô hình thận trọng dựa chủ yếu vào ngữ nghĩa và phản hồi."}, "timeline": {"ttt": [{"window_idx": 0, "elapsed_minutes": 142.1, "elapsed_label": "2.4h", "cum_posts": 8, "prob_non_rumour": 0.24143198132514954, "prob_rumour": 0.7585680484771729, "pred_label": 1}, {"window_idx": 1, "elapsed_minutes": 595.85, "elapsed_label": "9.9h", "cum_posts": 16, "prob_non_rumour": 0.2334812879562378, "prob_rumour": 0.766518771648407, "pred_label": 1}, {"window_idx": 2, "elapsed_minutes": 616.1833333333333, "elapsed_label": "10.3h", "cum_posts": 19, "prob_non_rumour": 0.23144744336605072, "prob_rumour": 0.7685525417327881, "pred_label": 1}], "ucttt": [{"window_idx": 0, "elapsed_minutes": 142.1, "elapsed_label": "2.4h", "cum_posts": 8, "prob_non_rumour": 0.7952223420143127, "prob_rumour": 0.20477768778800964, "pred_label": 0}, {"window_idx": 1, "elapsed_minutes": 595.85, "elapsed_label": "9.9h", "cum_posts": 16, "prob_non_rumour": 0.7925543785095215, "prob_rumour": 0.20744556188583374, "pred_label": 0}, {"window_idx": 2, "elapsed_minutes": 616.1833333333333, "elapsed_label": "10.3h", "cum_posts": 19, "prob_non_rumour": 0.7918989658355713, "prob_rumour": 0.20810100436210632, "pred_label": 0}]}, "impact": {"status": "CORRECTED_BY_UC", "title": "🎯 SỬA ĐÚNG NGOẠN MỤC: TRÁNH BÁO ĐỘNG GIẢ (False Rumour Alarm Prevented)", "description": "TTT gốc bị đánh lừa bởi từ ngữ căng thẳng giật gân nên dự đoán là TIN ĐỒN. Nhưng mô hình UC-TTT nhờ nhận diện tác giả là phóng viên/tài khoản uy tín cao nên đã khôi phục đúng phán đoán TIN XÁC THỰC."}, "badge": "Fold 0 (CH): TTT đoán 76.9% -> UC sửa 20.8%", "category": "Đảo chiều phán đoán (TTT: 76.9% -> UC: 20.8%)", "summary": "Bài đăng khẳng định vụ tấn công khủng bố tòa soạn Charlie Hebdo là có thật ('Wake up, it\\'s real'). TTT gốc bị từ ngữ kích động đánh lừa phán đoán là TIN ĐỒN với độ tự tin 76.9%. UC-TTT phân tích tín hiệu người dùng và mạng lưới phản hồi đã hạ xác suất xuống 20.8%, sửa đúng thành TIN XÁC THỰC.", "title": "Charlie Hebdo (CH): Vụ tấn công tòa soạn @LadySandersfarm", "reactions_list": [{"created_at": "Fri Jan 09 16:16:55 +0000 2015", "screen_name": "VoicePatriotism", "verified": false, "followers_count": 967, "text": "@LadySandersfarm @ImusZero WE INVITED THEM IN --- TIME TO INVITE THEM OUT!"}, {"created_at": "Fri Jan 09 17:31:54 +0000 2015", "screen_name": "NWBelle77", "verified": false, "followers_count": 229, "text": "@LadySandersfarm Psshh! Ignore me. I was right the first time. Sorry, got a lot on my side of the 'puter screen. Just check out the link. ;)"}, {"created_at": "Fri Jan 09 18:00:27 +0000 2015", "screen_name": "caesiushominis", "verified": false, "followers_count": 6, "text": "@LadySandersfarm great tweet. So true"}, {"created_at": "Fri Jan 09 18:26:08 +0000 2015", "screen_name": "LadySandersfarm", "verified": false, "followers_count": 14586, "text": "@jackskershy @KandiRider Thank you, 😉"}, {"created_at": "Sat Jan 10 01:06:36 +0000 2015", "screen_name": "LadySandersfarm", "verified": false, "followers_count": 14586, "text": "@singingbaker @Thew3B Look in above replies."}, {"created_at": "Fri Jan 09 19:27:04 +0000 2015", "screen_name": "metaafy", "verified": false, "followers_count": 146, "text": "@LadySandersfarm #thank_you http://t.co/LMruaj60Yx"}, {"created_at": "Sat Jan 10 01:04:06 +0000 2015", "screen_name": "LadySandersfarm", "verified": false, "followers_count": 14586, "text": "@i_kareem8 Pack it."}, {"created_at": "Fri Jan 09 17:59:44 +0000 2015", "screen_name": "jerrymitch54", "verified": false, "followers_count": 2446, "text": "@LadySandersfarm And that's not counting the ones PRIOR TO 9/11 since 1928 upon all of our EMBASSY'S....Google them."}, {"created_at": "Fri Jan 09 17:02:38 +0000 2015", "screen_name": "jackskershy", "verified": false, "followers_count": 793, "text": "@LadySandersfarm @KandiRider I love you guys xx"}, {"created_at": "Sat Jan 10 01:05:39 +0000 2015", "screen_name": "joeyyeo13", "verified": false, "followers_count": 1902, "text": "@akawhit1 @LadySandersfarm @nsa http://t.co/cwXLq7tpd7"}, {"created_at": "Fri Jan 09 17:30:24 +0000 2015", "screen_name": "NWBelle77", "verified": false, "followers_count": 229, "text": "@LadySandersfarm Oops, read that as murdered. Not attacks. I'd have 2 check on that, but if this meme is old, the number is probably higher."}, {"created_at": "Fri Jan 09 23:19:39 +0000 2015", "screen_name": "singingbaker", "verified": false, "followers_count": 269, "text": "@LadySandersfarm @Thew3B do you have a link for that?"}, {"created_at": "Sat Jan 10 01:25:53 +0000 2015", "screen_name": "LaDonnaRae1961", "verified": false, "followers_count": 2112, "text": ".@akawhit1 @DagnyRed @LadySandersfarm @nsa GOOD POINT! EXCELLENT IN FACT! NOW I UNDERSTAND THE WAR ON THEM AND .@CIA!!!!!"}, {"created_at": "Fri Jan 09 15:40:05 +0000 2015", "screen_name": "GanjaGaryGreen", "verified": false, "followers_count": 593, "text": "@LadySandersfarm @PaulReverePress coincidence this attack happened after France went anti-Zion and voted up Palestinian statehood? Lol not"}, {"created_at": "Sat Jan 10 01:25:59 +0000 2015", "screen_name": "mednurse202", "verified": false, "followers_count": 1536, "text": "@akawhit1 @DagnyRed @LadySandersfarm @nsa THEY TRUELY NEED TO BE GONE FROM AMERICA!!!!"}], "features_12": [{"group": "1. Mạng xã hội", "name": "Followers (log_followers)", "val_str": "14,090", "log_val": "9.55", "impact": "Lan truyền rộng"}, {"group": "1. Mạng xã hội", "name": "Following (log_friends)", "val_str": "10,498", "log_val": "9.26", "impact": "Kết nối bạn bè"}, {"group": "1. Mạng xã hội", "name": "Tỷ lệ uy tín (reputation_ratio)", "val_str": "1.34", "log_val": "0.85", "impact": "Uy tín vượt trội"}, {"group": "2. Lịch sử", "name": "Tuổi thọ tài khoản (log_account_age_days)", "val_str": "527 ngày", "log_val": "6.27", "impact": "Thâm niên cao"}, {"group": "2. Lịch sử", "name": "Số tweet đã đăng (log_statuses_count)", "val_str": "84,706", "log_val": "11.35", "impact": "Tần suất hoạt động"}, {"group": "2. Lịch sử", "name": "Số lượt thích (log_favourites_count)", "val_str": "23,204", "log_val": "10.05", "impact": "Mức độ tương tác"}, {"group": "3. Xác thực & Hồ sơ", "name": "Xác minh chính chủ (verified)", "val_str": "Không", "log_val": "0.00", "impact": "Chưa định danh"}, {"group": "3. Xác thực & Hồ sơ", "name": "Có tiểu sử Bio (has_description)", "val_str": "Có", "log_val": "1.00", "impact": "Thông tin minh bạch"}, {"group": "3. Xác thực & Hồ sơ", "name": "Có liên kết ngoài (has_url)", "val_str": "Không", "log_val": "0.00", "impact": "Dẫn nguồn xác thực"}, {"group": "3. Xác thực & Hồ sơ", "name": "Ảnh đại diện mặc định (default_profile_image)", "val_str": "Tùy biến", "log_val": "0.00", "impact": "Đầu tư hồ sơ"}, {"group": "4. Danh sách & Cây", "name": "Số danh sách vào (log_listed_count)", "val_str": "222", "log_val": "5.41", "impact": "Được cộng đồng theo dõi"}, {"group": "4. Danh sách & Cây", "name": "Tỷ lệ người phản hồi có tick xanh (verified_reaction_ratio)", "val_str": "0.0% (0/18)", "log_val": "0.000", "impact": "Cộng đồng kiểm chứng"}]}, {"thread_id": "544384467809230848", "event": "sydneysiege", "ground_truth": 0, "ground_truth_name": "Non-rumour (Tin xác thực)", "source_tweet": {"id": "544384467809230848", "author_name": "Bridie Jabour", "screen_name": "bkjabour", "verified": false, "followers_count": 9074, "friends_count": 2715, "reputation_ratio": 3.3409425625920472, "statuses_count": 17887, "credibility_score": 55, "text": "The AFP have said the hostage taker is monitoring social media, according to Guardian Australia sources. #sydneysiege", "created_at": "Mon Dec 15 06:52:25 +0000 2014", "description": "Guardian Australia reporter. Views not the Guardian's, unless its view is curly hair is cool."}, "num_nodes": 21, "num_reactions": 20, "ttt_prediction": {"label": 1, "label_name": "Rumour (Tin đồn)", "prob_non_rumour": 0.43473392724990845, "prob_rumour": 0.5652660727500916, "is_correct": false}, "ucttt_prediction": {"label": 0, "label_name": "Non-rumour (Tin xác thực)", "prob_non_rumour": 0.640981912612915, "prob_rumour": 0.35901808738708496, "is_correct": true}, "interpretability": {"gate_root_alpha": 0.46527132391929626, "gate_overall_alpha": 0.467399924993515, "user_weight_pct": 46.5, "text_weight_pct": 53.5, "explanation_text": "Mô hình phân bổ 46.5% trọng số vào độ uy tín tài khoản và 53.5% vào ngữ nghĩa văn bản. Tài khoản chưa xác minh nên mô hình thận trọng dựa chủ yếu vào ngữ nghĩa và phản hồi."}, "timeline": {"ttt": [{"window_idx": 0, "elapsed_minutes": 6.233333333333333, "elapsed_label": "6m", "cum_posts": 8, "prob_non_rumour": 0.4389348328113556, "prob_rumour": 0.5610651969909668, "pred_label": 1}, {"window_idx": 1, "elapsed_minutes": 33.81666666666667, "elapsed_label": "33m", "cum_posts": 16, "prob_non_rumour": 0.4361531734466553, "prob_rumour": 0.5638468861579895, "pred_label": 1}, {"window_idx": 2, "elapsed_minutes": 179.91666666666666, "elapsed_label": "3.0h", "cum_posts": 21, "prob_non_rumour": 0.43473392724990845, "prob_rumour": 0.5652660727500916, "pred_label": 1}], "ucttt": [{"window_idx": 0, "elapsed_minutes": 6.233333333333333, "elapsed_label": "6m", "cum_posts": 8, "prob_non_rumour": 0.652649998664856, "prob_rumour": 0.34734997153282166, "pred_label": 0}, {"window_idx": 1, "elapsed_minutes": 33.81666666666667, "elapsed_label": "33m", "cum_posts": 16, "prob_non_rumour": 0.6448516845703125, "prob_rumour": 0.3551483154296875, "pred_label": 0}, {"window_idx": 2, "elapsed_minutes": 179.91666666666666, "elapsed_label": "3.0h", "cum_posts": 21, "prob_non_rumour": 0.640981912612915, "prob_rumour": 0.35901808738708496, "pred_label": 0}]}, "impact": {"status": "CORRECTED_BY_UC", "title": "🎯 SỬA ĐÚNG NGOẠN MỤC: TRÁNH BÁO ĐỘNG GIẢ (False Rumour Alarm Prevented)", "description": "TTT gốc bị đánh lừa bởi từ ngữ căng thẳng giật gân nên dự đoán là TIN ĐỒN. Nhưng mô hình UC-TTT nhờ nhận diện tác giả là phóng viên/tài khoản uy tín cao nên đã khôi phục đúng phán đoán TIN XÁC THỰC."}, "badge": "Fold 4 (SS): TTT đoán 56.5% -> UC sửa 35.9%", "category": "Xác minh nguồn tin hiện trường (TTT: 56.5% -> UC: 35.9%)", "summary": "Phóng viên hiện trường báo cáo thông tin từ Cảnh sát Liên bang Úc (AFP) về việc kẻ bắt giữ con tin đang theo dõi mạng xã hội. TTT gốc dự đoán sai lệch là TIN ĐỒN (56.5%). UC-TTT nhận diện tác giả là phóng viên Guardian tác nghiệp hiện trường, điều chỉnh xác suất về 35.9% và phán đoán đúng TIN XÁC THỰC.", "title": "Sydney Siege (SS): Nhà báo Guardian @bkjabour", "reactions_list": [{"created_at": "Mon Dec 15 07:02:22 +0000 2014", "screen_name": "CliffB96", "verified": false, "followers_count": 840, "text": "@bkjabour obviously didn't get enough attention as a kid."}, {"created_at": "Mon Dec 15 06:53:14 +0000 2014", "screen_name": "glengyron", "verified": false, "followers_count": 2250, "text": "@bkjabour one guy? Starting to look like he has friends.  #sydneysiege"}, {"created_at": "Mon Dec 15 09:50:08 +0000 2014", "screen_name": "mythicagothiga", "verified": false, "followers_count": 94, "text": "@rqskye @HeyASIO @bkjabour Am more curious about why all general conversation has ceased.  Wondering how much control the gov has."}, {"created_at": "Mon Dec 15 08:57:38 +0000 2014", "screen_name": "rqskye", "verified": false, "followers_count": 1038, "text": "@mythicagothiga @HeyASIO @bkjabour It's a huge cafe. Safe to assume it has at least one TV, too."}, {"created_at": "Mon Dec 15 06:57:44 +0000 2014", "screen_name": "SSchmeidl", "verified": false, "followers_count": 84, "text": "@bkjabour @antloewenstein attention seeking t hen"}, {"created_at": "Mon Dec 15 06:58:39 +0000 2014", "screen_name": "shibz_1989", "verified": false, "followers_count": 844, "text": "@bkjabour @DavidCampbell73 which is why the media needs to stop with police plans!!"}, {"created_at": "Mon Dec 15 08:55:02 +0000 2014", "screen_name": "mythicagothiga", "verified": false, "followers_count": 94, "text": "@HeyASIO @bkjabour Is that why things just suddenly got really, really quiet on the #sydneysiege?"}, {"created_at": "Mon Dec 15 06:53:31 +0000 2014", "screen_name": "johnmcternan", "verified": false, "followers_count": 16393, "text": "@bkjabour ie Like 80% of Australians has a smart-phone."}, {"created_at": "Mon Dec 15 07:10:44 +0000 2014", "screen_name": "danieldursun", "verified": false, "followers_count": 18, "text": "@bkjabour what a load of BS"}, {"created_at": "Mon Dec 15 07:14:29 +0000 2014", "screen_name": "paulsbootique", "verified": false, "followers_count": 331, "text": "“@bkjabour: The AFP have said the hostage taker is monitoring social media, according to Guardian Australia sources. #sydneysiege” #noshit"}, {"created_at": "Mon Dec 15 07:19:19 +0000 2014", "screen_name": "Bay35Pablo", "verified": false, "followers_count": 211, "text": "@bkjabour @FlankerLady7 better source of news that commercial TV or radio ..."}, {"created_at": "Mon Dec 15 07:04:31 +0000 2014", "screen_name": "melkettle", "verified": false, "followers_count": 7564, "text": "@bkjabour hopefully that’s not a surprise to them."}, {"created_at": "Mon Dec 15 06:54:24 +0000 2014", "screen_name": "incog_guy", "verified": false, "followers_count": 120, "text": "@bkjabour wonder if he's #blockedbybishop @TheMurdochTimes"}, {"created_at": "Mon Dec 15 06:54:27 +0000 2014", "screen_name": "FallenAngel_Deb", "verified": false, "followers_count": 493, "text": "@bkjabour @glengyron NSA AFP why isn't all technology shut down??"}, {"created_at": "Mon Dec 15 09:52:20 +0000 2014", "screen_name": "mythicagothiga", "verified": false, "followers_count": 94, "text": "@rqskye @HeyASIO @bkjabour And why not use social media to their advantage? Leak something that they want to be be seen."}], "features_12": [{"group": "1. Mạng xã hội", "name": "Followers (log_followers)", "val_str": "9,074", "log_val": "9.11", "impact": "Lan truyền rộng"}, {"group": "1. Mạng xã hội", "name": "Following (log_friends)", "val_str": "2,715", "log_val": "7.91", "impact": "Kết nối bạn bè"}, {"group": "1. Mạng xã hội", "name": "Tỷ lệ uy tín (reputation_ratio)", "val_str": "3.34", "log_val": "1.47", "impact": "Uy tín vượt trội"}, {"group": "2. Lịch sử", "name": "Tuổi thọ tài khoản (log_account_age_days)", "val_str": "2,119 ngày", "log_val": "7.66", "impact": "Thâm niên cao"}, {"group": "2. Lịch sử", "name": "Số tweet đã đăng (log_statuses_count)", "val_str": "17,887", "log_val": "9.79", "impact": "Tần suất hoạt động"}, {"group": "2. Lịch sử", "name": "Số lượt thích (log_favourites_count)", "val_str": "307", "log_val": "5.73", "impact": "Mức độ tương tác"}, {"group": "3. Xác thực & Hồ sơ", "name": "Xác minh chính chủ (verified)", "val_str": "Không", "log_val": "0.00", "impact": "Chưa định danh"}, {"group": "3. Xác thực & Hồ sơ", "name": "Có tiểu sử Bio (has_description)", "val_str": "Có", "log_val": "1.00", "impact": "Thông tin minh bạch"}, {"group": "3. Xác thực & Hồ sơ", "name": "Có liên kết ngoài (has_url)", "val_str": "Có", "log_val": "1.00", "impact": "Dẫn nguồn xác thực"}, {"group": "3. Xác thực & Hồ sơ", "name": "Ảnh đại diện mặc định (default_profile_image)", "val_str": "Tùy biến", "log_val": "0.00", "impact": "Đầu tư hồ sơ"}, {"group": "4. Danh sách & Cây", "name": "Số danh sách vào (log_listed_count)", "val_str": "239", "log_val": "5.48", "impact": "Được cộng đồng theo dõi"}, {"group": "4. Danh sách & Cây", "name": "Tỷ lệ người phản hồi có tick xanh (verified_reaction_ratio)", "val_str": "0.0% (0/20)", "log_val": "0.000", "impact": "Cộng đồng kiểm chứng"}]}, {"thread_id": "498254929942028288", "event": "ferguson", "ground_truth": 1, "ground_truth_name": "Rumour (Tin đồn)", "source_tweet": {"id": "498254929942028288", "author_name": "Michele Catalano", "screen_name": "inthefade", "verified": false, "followers_count": 874288, "friends_count": 1416, "reputation_ratio": 616.999294283698, "statuses_count": 78426, "credibility_score": 70, "text": "17 year old unarmed kid shot ten times by police for stealing candy. I didn't know that was punishable by death.\n\n(read the #ferguson tag)", "created_at": "Sat Aug 09 23:50:07 +0000 2014", "description": "Writer at large, civil servant by day.  Author of 1/100 magazine https://t.co/NxJyyZU0ez\r\nMourning the New York Islanders  and Nassau Coliseum 2014-2015."}, "num_nodes": 21, "num_reactions": 20, "ttt_prediction": {"label": 0, "label_name": "Non-rumour (Tin xác thực)", "prob_non_rumour": 0.5240761041641235, "prob_rumour": 0.47592389583587646, "is_correct": false}, "ucttt_prediction": {"label": 1, "label_name": "Rumour (Tin đồn)", "prob_non_rumour": 0.2797549366950989, "prob_rumour": 0.7202450633049011, "is_correct": true}, "interpretability": {"gate_root_alpha": 0.4320359230041504, "gate_overall_alpha": 0.4424611032009125, "user_weight_pct": 43.2, "text_weight_pct": 56.8, "explanation_text": "Mô hình phân bổ 43.2% trọng số vào độ uy tín tài khoản và 56.8% vào ngữ nghĩa văn bản. Tài khoản có tick xanh và chỉ số tương tác cao giúp củng cố độ tin cậy của thông tin."}, "timeline": {"ttt": [{"window_idx": 0, "elapsed_minutes": 170.18333333333334, "elapsed_label": "2.8h", "cum_posts": 8, "prob_non_rumour": 0.5019452571868896, "prob_rumour": 0.49805474281311035, "pred_label": 0}, {"window_idx": 1, "elapsed_minutes": 1001.9166666666666, "elapsed_label": "16.7h", "cum_posts": 16, "prob_non_rumour": 0.5175434350967407, "prob_rumour": 0.48245659470558167, "pred_label": 0}, {"window_idx": 2, "elapsed_minutes": 2499.8166666666666, "elapsed_label": "41.7h", "cum_posts": 21, "prob_non_rumour": 0.5240761041641235, "prob_rumour": 0.47592389583587646, "pred_label": 0}], "ucttt": [{"window_idx": 0, "elapsed_minutes": 170.18333333333334, "elapsed_label": "2.8h", "cum_posts": 8, "prob_non_rumour": 0.27680352330207825, "prob_rumour": 0.7231964468955994, "pred_label": 1}, {"window_idx": 1, "elapsed_minutes": 1001.9166666666666, "elapsed_label": "16.7h", "cum_posts": 16, "prob_non_rumour": 0.27919748425483704, "prob_rumour": 0.7208024859428406, "pred_label": 1}, {"window_idx": 2, "elapsed_minutes": 2499.8166666666666, "elapsed_label": "41.7h", "cum_posts": 21, "prob_non_rumour": 0.2797549366950989, "prob_rumour": 0.7202450633049011, "pred_label": 1}]}, "impact": {"status": "CORRECTED_BY_UC", "title": "🎯 SỬA ĐÚNG NGOẠN MỤC: BÓC MẼ TIN ĐỒN NÚP BÓNG (Stealth Rumour Unmasked)", "description": "Tin đồn sử dụng văn phong trang trọng hành chính đánh lừa TTT gốc, nhưng UC-TTT kết hợp phản hồi hoài nghi của người dùng bên dưới cây đã bóc mẽ chính xác TIN ĐỒN."}, "badge": "Fold 1 (FG): TTT bỏ sót 47.6% -> UC bắt đúng 72.0%", "category": "Khắc phục bỏ sót tin đồn (TTT: 47.6% -> UC: 72.0%)", "summary": "Bài đăng lan truyền tin đồn sai sự thật rằng thiếu niên bị cảnh sát bắn 10 phát chỉ vì trộm kẹo. TTT gốc bị đánh lừa bởi cấu trúc câu hỏi han và dự đoán là Tin xác thực (47.6% tin đồn, tức bỏ sót tin đồn). UC-TTT nhận diện đặc trưng tài khoản và phản hồi hoài nghi của cộng đồng, nâng xác suất tin đồn lên 72.0% và bắt chính xác TIN ĐỒN.", "title": "Ferguson (FG): Bắt đúng tin đồn kích động @inthefade", "reactions_list": [{"created_at": "Sun Aug 10 01:58:40 +0000 2014", "screen_name": "hayes_nan", "verified": false, "followers_count": 67, "text": "@inthefade there's no excuse"}, {"created_at": "Mon Aug 11 05:57:51 +0000 2014", "screen_name": "AlexisAStevens", "verified": false, "followers_count": 122, "text": "@inthefade He was 18. Nothing to do with stealing candy. He was walking in the street. Horrible situation. But stop spreading false facts."}, {"created_at": "Mon Aug 11 03:36:01 +0000 2014", "screen_name": "Estleton12", "verified": false, "followers_count": 10, "text": "@inthefade It is if someone starts assaulting an officer"}, {"created_at": "Sun Aug 10 00:24:46 +0000 2014", "screen_name": "doodlebug0", "verified": false, "followers_count": 3114, "text": "@AnneMarieFlynn2 @adam_zander @inthefade This is unbelievable, or should be."}, {"created_at": "Sun Aug 10 03:39:28 +0000 2014", "screen_name": "Alasscan_", "verified": false, "followers_count": 6632, "text": "@JackieWillard2 These days anything, especially with Stand Your Ground and even a sneeze is punishable by death. @inthefade"}, {"created_at": "Sun Aug 10 03:40:11 +0000 2014", "screen_name": "JackieWillard2", "verified": false, "followers_count": 205, "text": "@Alasscan_ @inthefade true"}, {"created_at": "Sun Aug 10 05:46:50 +0000 2014", "screen_name": "ocblues", "verified": false, "followers_count": 282, "text": ". @inthefade We don't even know that he stole any candy."}, {"created_at": "Sun Aug 10 00:03:30 +0000 2014", "screen_name": "AnneMarieFlynn2", "verified": false, "followers_count": 1222, "text": "No excuse. “@inthefade: 17 year old unarmed kid shot ten times by police for stealing candy. I didn't know that was punishable by death."}, {"created_at": "Mon Aug 11 17:29:56 +0000 2014", "screen_name": "Earnest_One", "verified": false, "followers_count": 11197, "text": "@AnneMarieFlynn2 @klemosy @inthefade Anything is punishable by death if the youth is black."}, {"created_at": "Sun Aug 10 03:36:57 +0000 2014", "screen_name": "JackieWillard2", "verified": false, "followers_count": 205, "text": "@inthefade @Alasscan_ apparently it is now"}, {"created_at": "Sun Aug 10 15:42:02 +0000 2014", "screen_name": "inthefade", "verified": false, "followers_count": 873308, "text": "@pjhnsn8 I was just going off what I read in the #ferguson tag early last night. Wasn't any real news out at that point."}, {"created_at": "Sun Aug 10 18:36:37 +0000 2014", "screen_name": "TeriAgidani", "verified": false, "followers_count": 45, "text": "@inthefade #Shot ten times for stealing candy? God have mercy!"}, {"created_at": "Sun Aug 10 02:12:10 +0000 2014", "screen_name": "tbmuch", "verified": false, "followers_count": 6, "text": "@inthefade @divineem It applies to Black people."}, {"created_at": "Sun Aug 10 15:40:27 +0000 2014", "screen_name": "pjhnsn8", "verified": false, "followers_count": 1141, "text": "@inthefade there has not been any proof that he stole candy. I guess skittles(candy) has become a reason to kill black teens."}, {"created_at": "Sun Aug 10 02:40:18 +0000 2014", "screen_name": "Donnajcherold", "verified": false, "followers_count": 1256, "text": "@inthefade @Alllwftopic Agreed! Should be charged w/murder!!"}], "features_12": [{"group": "1. Mạng xã hội", "name": "Followers (log_followers)", "val_str": "874,288", "log_val": "13.68", "impact": "Lan truyền rộng"}, {"group": "1. Mạng xã hội", "name": "Following (log_friends)", "val_str": "1,416", "log_val": "7.26", "impact": "Kết nối bạn bè"}, {"group": "1. Mạng xã hội", "name": "Tỷ lệ uy tín (reputation_ratio)", "val_str": "617.00", "log_val": "6.43", "impact": "Uy tín vượt trội"}, {"group": "2. Lịch sử", "name": "Tuổi thọ tài khoản (log_account_age_days)", "val_str": "2,595 ngày", "log_val": "7.86", "impact": "Thâm niên cao"}, {"group": "2. Lịch sử", "name": "Số tweet đã đăng (log_statuses_count)", "val_str": "78,426", "log_val": "11.27", "impact": "Tần suất hoạt động"}, {"group": "2. Lịch sử", "name": "Số lượt thích (log_favourites_count)", "val_str": "35,025", "log_val": "10.46", "impact": "Mức độ tương tác"}, {"group": "3. Xác thực & Hồ sơ", "name": "Xác minh chính chủ (verified)", "val_str": "Không", "log_val": "0.00", "impact": "Chưa định danh"}, {"group": "3. Xác thực & Hồ sơ", "name": "Có tiểu sử Bio (has_description)", "val_str": "Có", "log_val": "1.00", "impact": "Thông tin minh bạch"}, {"group": "3. Xác thực & Hồ sơ", "name": "Có liên kết ngoài (has_url)", "val_str": "Có", "log_val": "1.00", "impact": "Dẫn nguồn xác thực"}, {"group": "3. Xác thực & Hồ sơ", "name": "Ảnh đại diện mặc định (default_profile_image)", "val_str": "Tùy biến", "log_val": "0.00", "impact": "Đầu tư hồ sơ"}, {"group": "4. Danh sách & Cây", "name": "Số danh sách vào (log_listed_count)", "val_str": "1,794", "log_val": "7.49", "impact": "Được cộng đồng theo dõi"}, {"group": "4. Danh sách & Cây", "name": "Tỷ lệ người phản hồi có tick xanh (verified_reaction_ratio)", "val_str": "0.0% (0/20)", "log_val": "0.000", "impact": "Cộng đồng kiểm chứng"}]}, {"thread_id": "524931083797004288", "event": "ottawashooting", "ground_truth": 0, "ground_truth_name": "Non-rumour (Tin xác thực)", "source_tweet": {"id": "524931083797004288", "author_name": "Breaking News", "screen_name": "BreakingNews", "verified": true, "followers_count": 6999939, "friends_count": 501, "reputation_ratio": 13944.101593625497, "statuses_count": 87770, "credibility_score": 100, "text": "Prime Minister Stephen Harper is safe and has left Parliament Hill, spokesman says - @CBCAlerts https://t.co/wCqPcyqMxK", "created_at": "Wed Oct 22 14:31:37 +0000 2014", "description": "Download our new iOS and Android apps to control the breaking news you want to see."}, "num_nodes": 4, "num_reactions": 3, "ttt_prediction": {"label": 1, "label_name": "Rumour (Tin đồn)", "prob_non_rumour": 0.29641950130462646, "prob_rumour": 0.7035805583000183, "is_correct": false}, "ucttt_prediction": {"label": 0, "label_name": "Non-rumour (Tin xác thực)", "prob_non_rumour": 0.6406696438789368, "prob_rumour": 0.3593303859233856, "is_correct": true}, "interpretability": {"gate_root_alpha": 0.4372514486312866, "gate_overall_alpha": 0.4374934136867523, "user_weight_pct": 43.7, "text_weight_pct": 56.3, "explanation_text": "Mô hình phân bổ 43.7% trọng số vào độ uy tín tài khoản và 56.3% vào ngữ nghĩa văn bản. Tài khoản có tick xanh và chỉ số tương tác cao giúp củng cố độ tin cậy của thông tin."}, "timeline": {"ttt": [{"window_idx": 0, "elapsed_minutes": 7.133333333333334, "elapsed_label": "7m", "cum_posts": 4, "prob_non_rumour": 0.29641950130462646, "prob_rumour": 0.7035805583000183, "pred_label": 1}], "ucttt": [{"window_idx": 0, "elapsed_minutes": 7.133333333333334, "elapsed_label": "7m", "cum_posts": 4, "prob_non_rumour": 0.6406696438789368, "prob_rumour": 0.3593303859233856, "pred_label": 0}]}, "impact": {"status": "CORRECTED_BY_UC", "title": "🎯 SỬA ĐÚNG NGOẠN MỤC: TRÁNH BÁO ĐỘNG GIẢ (False Rumour Alarm Prevented)", "description": "TTT gốc bị đánh lừa bởi từ ngữ căng thẳng giật gân nên dự đoán là TIN ĐỒN. Nhưng mô hình UC-TTT nhờ nhận diện tác giả là phóng viên/tài khoản uy tín cao nên đã khôi phục đúng phán đoán TIN XÁC THỰC."}, "badge": "Fold 3 (OS): TTT đoán 70.4% -> UC sửa 35.9%", "category": "Triệt tiêu báo động giả (TTT: 70.4% -> UC: 35.9%)", "summary": "Thông tin khẩn xác nhận Thủ tướng Canada Stephen Harper đã an toàn rời khỏi tòa nhà Nghị viện sau vụ xả súng. TTT gốc bị ngữ cảnh xả súng bạo lực đánh lừa dự đoán là TIN ĐỒN (70.4%). UC-TTT nhận diện hãng tin @BreakingNews (7 triệu followers, tick xanh) đã sửa đúng thành TIN XÁC THỰC (35.9%).", "title": "Ottawa Shooting (OS): Hãng tin @BreakingNews (7.0M Followers)", "reactions_list": [{"created_at": "Wed Oct 22 14:32:05 +0000 2014", "screen_name": "evaninfo", "verified": false, "followers_count": 553, "text": "“@BreakingNews: Prime Minister Stephen Harper is safe and has left Parliament Hill, spokesman says - @CBCAlerts https://t.co/geOPU5WDN7”"}, {"created_at": "Wed Oct 22 14:32:21 +0000 2014", "screen_name": "Del_sys32", "verified": false, "followers_count": 18, "text": "@BreakingNews @CBCAlerts You're always the breaker of bad news..."}, {"created_at": "Wed Oct 22 14:38:45 +0000 2014", "screen_name": "FletJan", "verified": false, "followers_count": 1338, "text": "@BreakingNews @MichaelJMo @CBCAlerts So, the captain never intended to go down with the ship?  Where's the leadership?  Did he know?"}], "features_12": [{"group": "1. Mạng xã hội", "name": "Followers (log_followers)", "val_str": "6,999,939", "log_val": "15.76", "impact": "Lan truyền rộng"}, {"group": "1. Mạng xã hội", "name": "Following (log_friends)", "val_str": "501", "log_val": "6.22", "impact": "Kết nối bạn bè"}, {"group": "1. Mạng xã hội", "name": "Tỷ lệ uy tín (reputation_ratio)", "val_str": "13944.10", "log_val": "9.54", "impact": "Uy tín vượt trội"}, {"group": "2. Lịch sử", "name": "Tuổi thọ tài khoản (log_account_age_days)", "val_str": "2,718 ngày", "log_val": "7.91", "impact": "Thâm niên cao"}, {"group": "2. Lịch sử", "name": "Số tweet đã đăng (log_statuses_count)", "val_str": "87,770", "log_val": "11.38", "impact": "Tần suất hoạt động"}, {"group": "2. Lịch sử", "name": "Số lượt thích (log_favourites_count)", "val_str": "19", "log_val": "3.00", "impact": "Mức độ tương tác"}, {"group": "3. Xác thực & Hồ sơ", "name": "Xác minh chính chủ (verified)", "val_str": "Có (Tick xanh)", "log_val": "1.00", "impact": "Bảo chứng danh tính"}, {"group": "3. Xác thực & Hồ sơ", "name": "Có tiểu sử Bio (has_description)", "val_str": "Có", "log_val": "1.00", "impact": "Thông tin minh bạch"}, {"group": "3. Xác thực & Hồ sơ", "name": "Có liên kết ngoài (has_url)", "val_str": "Có", "log_val": "1.00", "impact": "Dẫn nguồn xác thực"}, {"group": "3. Xác thực & Hồ sơ", "name": "Ảnh đại diện mặc định (default_profile_image)", "val_str": "Tùy biến", "log_val": "0.00", "impact": "Đầu tư hồ sơ"}, {"group": "4. Danh sách & Cây", "name": "Số danh sách vào (log_listed_count)", "val_str": "89,113", "log_val": "11.40", "impact": "Được cộng đồng theo dõi"}, {"group": "4. Danh sách & Cây", "name": "Tỷ lệ người phản hồi có tick xanh (verified_reaction_ratio)", "val_str": "0.0% (0/3)", "log_val": "0.000", "impact": "Cộng đồng kiểm chứng"}]}, {"thread_id": "581247332282306561", "event": "germanwings-crash", "ground_truth": 0, "ground_truth_name": "Non-rumour (Tin xác thực)", "source_tweet": {"id": "581247332282306561", "author_name": "CNN", "screen_name": "CNN", "verified": true, "followers_count": 16352546, "friends_count": 1074, "reputation_ratio": 15211.670697674419, "statuses_count": 59009, "credibility_score": 100, "text": "Do you have questions about the #Germanwings crash? CNN experts answer #GermanwingsQs: http://t.co/eXKydn7mrd\nhttps://t.co/DChp07sO0w", "created_at": "Fri Mar 27 00:12:17 +0000 2015", "description": "It’s our job to #GoThere and tell the most difficult stories. Come with us!"}, "num_nodes": 19, "num_reactions": 18, "ttt_prediction": {"label": 1, "label_name": "Rumour (Tin đồn)", "prob_non_rumour": 0.42601683735847473, "prob_rumour": 0.5739831924438477, "is_correct": false}, "ucttt_prediction": {"label": 0, "label_name": "Non-rumour (Tin xác thực)", "prob_non_rumour": 0.9123446941375732, "prob_rumour": 0.08765536546707153, "is_correct": true}, "interpretability": {"gate_root_alpha": 0.40175604820251465, "gate_overall_alpha": 0.4030137360095978, "user_weight_pct": 40.2, "text_weight_pct": 59.8, "explanation_text": "Mô hình phân bổ 40.2% trọng số vào độ uy tín tài khoản và 59.8% vào ngữ nghĩa văn bản. Tài khoản có tick xanh và chỉ số tương tác cao giúp củng cố độ tin cậy của thông tin."}, "timeline": {"ttt": [{"window_idx": 0, "elapsed_minutes": 50.016666666666666, "elapsed_label": "50m", "cum_posts": 8, "prob_non_rumour": 0.42350777983665466, "prob_rumour": 0.576492190361023, "pred_label": 1}, {"window_idx": 1, "elapsed_minutes": 211.91666666666666, "elapsed_label": "3.5h", "cum_posts": 16, "prob_non_rumour": 0.42579764127731323, "prob_rumour": 0.5742023587226868, "pred_label": 1}, {"window_idx": 2, "elapsed_minutes": 336.9, "elapsed_label": "5.6h", "cum_posts": 19, "prob_non_rumour": 0.42601683735847473, "prob_rumour": 0.5739831924438477, "pred_label": 1}], "ucttt": [{"window_idx": 0, "elapsed_minutes": 50.016666666666666, "elapsed_label": "50m", "cum_posts": 8, "prob_non_rumour": 0.9072011709213257, "prob_rumour": 0.0927988812327385, "pred_label": 0}, {"window_idx": 1, "elapsed_minutes": 211.91666666666666, "elapsed_label": "3.5h", "cum_posts": 16, "prob_non_rumour": 0.9104413390159607, "prob_rumour": 0.0895586758852005, "pred_label": 0}, {"window_idx": 2, "elapsed_minutes": 336.9, "elapsed_label": "5.6h", "cum_posts": 19, "prob_non_rumour": 0.9123446941375732, "prob_rumour": 0.08765536546707153, "pred_label": 0}]}, "impact": {"status": "CORRECTED_BY_UC", "title": "🎯 SỬA ĐÚNG NGOẠN MỤC: TRÁNH BÁO ĐỘNG GIẢ (False Rumour Alarm Prevented)", "description": "TTT gốc bị đánh lừa bởi từ ngữ căng thẳng giật gân nên dự đoán là TIN ĐỒN. Nhưng mô hình UC-TTT nhờ nhận diện tác giả là phóng viên/tài khoản uy tín cao nên đã khôi phục đúng phán đoán TIN XÁC THỰC."}, "badge": "Fold 2 (GC): TTT đoán 57.4% -> UC sửa 8.8%", "category": "Triệt tiêu báo động giả thảm kịch (TTT: 57.4% -> UC: 8.8%)", "summary": "Trong thảm họa máy bay rơi Germanwings, tweet hỏi đáp trực tiếp của @CNN bị TTT gốc báo động giả là TIN ĐỒN (57.4%) do chứa từ khóa tai nạn máy bay rơi. UC-TTT kết hợp độ uy tín tối thượng của @CNN (16.3M followers, tick xanh) và phản hồi thực tế đã hạ xác suất tin đồn xuống 8.8%, phục hồi đúng nhãn TIN XÁC THỰC.", "title": "Germanwings (GC): Hãng tin @CNN (16.3M Followers)", "reactions_list": [{"created_at": "Fri Mar 27 01:28:26 +0000 2015", "screen_name": "ThomasPaine5", "verified": false, "followers_count": 1747, "text": "@BrZazo @CNN Airliners can be hacked and flown remotely -- with no possibility of override by the crew. #Germanwings"}, {"created_at": "Fri Mar 27 02:40:48 +0000 2015", "screen_name": "Lainie808", "verified": false, "followers_count": 1514, "text": "@Forbidden_Child either that or diapers. It's good enough for astronauts."}, {"created_at": "Fri Mar 27 00:33:51 +0000 2015", "screen_name": "hey_darbie", "verified": false, "followers_count": 577, "text": "@CNN would the pilot have had a window to get into the cockpit when copilot had to reset the lockout ? #flight9525"}, {"created_at": "Fri Mar 27 05:49:11 +0000 2015", "screen_name": "ObamaBreaking", "verified": false, "followers_count": 16420, "text": "@CNN More #Germanwings reports point to Co-Pilot &amp; his conversion to #Islam http://t.co/B9Pqrj2H12"}, {"created_at": "Fri Mar 27 02:22:17 +0000 2015", "screen_name": "Forbidden_Child", "verified": false, "followers_count": 3, "text": "........... Could there be? @Lainie808 @CNN"}, {"created_at": "Fri Mar 27 05:30:27 +0000 2015", "screen_name": "psael", "verified": false, "followers_count": 34662, "text": "@CNN Let's do as in old times again. 3 pilots on board instead of 2. It will be safer, better for security, crew, passengers and flight."}, {"created_at": "Fri Mar 27 00:14:47 +0000 2015", "screen_name": "Lainie808", "verified": false, "followers_count": 1514, "text": "@CNN considering the size of airline bathrooms, can't there be one in the cockpit?"}, {"created_at": "Fri Mar 27 00:59:24 +0000 2015", "screen_name": "clintsessentia1", "verified": false, "followers_count": 1073, "text": "@Lainie808 @CNN omg....that's what I want to know!"}, {"created_at": "Fri Mar 27 00:21:07 +0000 2015", "screen_name": "shirleyt861", "verified": false, "followers_count": 10, "text": "@CNN when the captain went to the bathroom did someone knock on the door and the copilot thought it was the captain and let him in"}, {"created_at": "Fri Mar 27 03:25:37 +0000 2015", "screen_name": "RozWolfPR", "verified": false, "followers_count": 795, "text": "@CNN Time to look toward Israel. El Al has ways to check the \"kooks\" before they start trouble. Psychics on payroll?"}, {"created_at": "Fri Mar 27 01:02:18 +0000 2015", "screen_name": "ThomasPaine5", "verified": false, "followers_count": 1747, "text": "@CNN #GermanwingsQs : Why does anyone believe this bulls#*t story about a #Germanwings pilot committing suicide?"}, {"created_at": "Fri Mar 27 00:23:14 +0000 2015", "screen_name": "shirleyt861", "verified": false, "followers_count": 10, "text": "@CNN and plus did someone check the captain background why did he go to the bathroom probably to pray but what prayer, I don't trust no one"}, {"created_at": "Fri Mar 27 01:22:12 +0000 2015", "screen_name": "BrZazo", "verified": false, "followers_count": 5, "text": "@ThomasPaine5 @CNN Agree.MILITARYINCIDENT?Italianjetfighter switched transponder to emergency #7700at10.35, near where 4U9525 began falling"}, {"created_at": "Fri Mar 27 01:23:47 +0000 2015", "screen_name": "ThomasPaine5", "verified": false, "followers_count": 1747, "text": "@BrZazo 23 year Booz Allen Hamilton/ National Geospatial Intelligence Agency employee on #Germanwings flight... http://t.co/H3xfrR26IW …"}, {"created_at": "Fri Mar 27 03:49:54 +0000 2015", "screen_name": "katbostick", "verified": false, "followers_count": 527, "text": "@CNN why not add fingerprint scanners in the cockpit requiring both pilots to override taking it out of autopilot? #GermanwingsQs"}], "features_12": [{"group": "1. Mạng xã hội", "name": "Followers (log_followers)", "val_str": "16,352,546", "log_val": "16.61", "impact": "Lan truyền rộng"}, {"group": "1. Mạng xã hội", "name": "Following (log_friends)", "val_str": "1,074", "log_val": "6.98", "impact": "Kết nối bạn bè"}, {"group": "1. Mạng xã hội", "name": "Tỷ lệ uy tín (reputation_ratio)", "val_str": "15211.67", "log_val": "9.63", "impact": "Uy tín vượt trội"}, {"group": "2. Lịch sử", "name": "Tuổi thọ tài khoản (log_account_age_days)", "val_str": "2,967 ngày", "log_val": "8.00", "impact": "Thâm niên cao"}, {"group": "2. Lịch sử", "name": "Số tweet đã đăng (log_statuses_count)", "val_str": "59,009", "log_val": "10.99", "impact": "Tần suất hoạt động"}, {"group": "2. Lịch sử", "name": "Số lượt thích (log_favourites_count)", "val_str": "1,067", "log_val": "6.97", "impact": "Mức độ tương tác"}, {"group": "3. Xác thực & Hồ sơ", "name": "Xác minh chính chủ (verified)", "val_str": "Có (Tick xanh)", "log_val": "1.00", "impact": "Bảo chứng danh tính"}, {"group": "3. Xác thực & Hồ sơ", "name": "Có tiểu sử Bio (has_description)", "val_str": "Có", "log_val": "1.00", "impact": "Thông tin minh bạch"}, {"group": "3. Xác thực & Hồ sơ", "name": "Có liên kết ngoài (has_url)", "val_str": "Có", "log_val": "1.00", "impact": "Dẫn nguồn xác thực"}, {"group": "3. Xác thực & Hồ sơ", "name": "Ảnh đại diện mặc định (default_profile_image)", "val_str": "Tùy biến", "log_val": "0.00", "impact": "Đầu tư hồ sơ"}, {"group": "4. Danh sách & Cây", "name": "Số danh sách vào (log_listed_count)", "val_str": "104,511", "log_val": "11.56", "impact": "Được cộng đồng theo dõi"}, {"group": "4. Danh sách & Cây", "name": "Tỷ lệ người phản hồi có tick xanh (verified_reaction_ratio)", "val_str": "0.0% (0/18)", "log_val": "0.000", "impact": "Cộng đồng kiểm chứng"}]}];
+    let currentIdx = 0;
+
+    function renderButtons() {
+      const container = document.getElementById("case-buttons");
+      container.innerHTML = "";
+      CASES.forEach((c, idx) => {
+        const btn = document.createElement("button");
+        btn.className = `p-2.5 rounded-lg border text-left text-xs font-semibold transition-all ${idx === currentIdx ? 'case-btn-active border-blue-600' : 'border-[var(--border)] bg-[var(--background)] hover:border-blue-400'}`;
+        btn.innerHTML = `<div class="truncate font-bold">${c.title}</div><div class="text-[10px] text-[var(--muted)] truncate">${c.badge}</div>`;
+        btn.onclick = () => selectCase(idx);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectCase(idx) {
+      currentIdx = idx;
+      renderButtons();
+      renderCase(CASES[idx]);
+    }
+
+    function renderCase(c) {
+      // Summary
+      document.getElementById("case-summary-box").innerHTML = `<b>Danh mục:</b> ${c.category} — ${c.summary}`;
+
+      // Verdict Banner
+      const banner = document.getElementById("verdict-banner");
+      if (c.impact.status === "CORRECTED_BY_UC") {
+        banner.className = "border rounded-xl p-4 shadow-sm space-y-1 bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-100";
+      } else {
+        banner.className = "border rounded-xl p-4 shadow-sm space-y-1 bg-blue-500/10 border-blue-500/30 text-blue-900 dark:text-blue-100";
+      }
+      document.getElementById("verdict-title").innerText = c.impact.title;
+      document.getElementById("verdict-desc").innerText = c.impact.description;
+
+      // Section 1
+      const src = c.source_tweet;
+      document.getElementById("author-name").innerText = src.author_name;
+      document.getElementById("author-handle").innerText = `@${src.screen_name}`;
+      document.getElementById("author-verified").style.display = src.verified ? "inline" : "none";
+      document.getElementById("author-verified-text").innerText = src.verified ? "ĐÃ XÁC MINH (Tick xanh)" : "Chưa xác minh";
+      document.getElementById("author-followers").innerText = Number(src.followers_count).toLocaleString();
+      document.getElementById("author-friends").innerText = Number(src.friends_count).toLocaleString();
+      document.getElementById("author-rep").innerText = Number(src.reputation_ratio).toFixed(2);
+      document.getElementById("author-statuses").innerText = Number(src.statuses_count).toLocaleString();
+      document.getElementById("author-score-val").innerText = `${src.credibility_score}/100`;
+      document.getElementById("author-score-bar").style.width = `${src.credibility_score}%`;
+
+      document.getElementById("claim-text").innerText = `"${src.text}"`;
+      document.getElementById("meta-time").innerText = src.created_at;
+      document.getElementById("meta-event").innerText = c.event;
+      document.getElementById("meta-ground-truth").innerText = c.ground_truth_name;
+      document.getElementById("meta-nodes").innerText = `${c.num_nodes} bài`;
+      document.getElementById("meta-reactions").innerText = `${c.num_reactions} bài`;
+      document.getElementById("meta-windows").innerText = `${c.timeline.ucttt.length} lát cắt`;
+
+      // Reactions Table
+      const tbReax = document.getElementById("reactions-table-body");
+      tbReax.innerHTML = "";
+      (c.reactions_list || []).forEach(r => {
+        const tr = document.createElement("tr");
+        tr.className = "text-[11px]";
+        tr.innerHTML = `<td class="p-1">${r.created_at}</td><td class="p-1 font-semibold">@${r.screen_name}</td><td class="p-1">${r.verified ? '✔️' : '❌'}</td><td class="p-1">${Number(r.followers_count).toLocaleString()}</td><td class="p-1">${r.text}</td>`;
+        tbReax.appendChild(tr);
+      });
+
+      // Section 2: Head-to-Head
+      const ttt = c.ttt_prediction;
+      const uc = c.ucttt_prediction;
+
+      const tttP = Math.round(ttt.prob_rumour * 100);
+      document.getElementById("ttt-pred-label").innerText = ttt.label_name;
+      document.getElementById("ttt-pred-label").className = `px-3 py-1 rounded-full text-xs font-bold ${ttt.label === 1 ? 'bg-rose-500/20 text-rose-600' : 'bg-emerald-500/20 text-emerald-600'}`;
+      document.getElementById("ttt-p-rumour").innerText = `${(ttt.prob_rumour * 100).toFixed(1)}%`;
+      document.getElementById("ttt-p-non").innerText = `${(ttt.prob_non_rumour * 100).toFixed(1)}%`;
+      document.getElementById("ttt-bar-rumour").style.width = `${tttP}%`;
+      document.getElementById("ttt-bar-non").style.width = `${100 - tttP}%`;
+      document.getElementById("ttt-correct-badge").innerText = ttt.is_correct ? "✅ Trùng khớp Nhãn Thực tế" : "❌ Sai lệch so với Nhãn Thực tế";
+      document.getElementById("ttt-correct-badge").className = `text-center text-xs font-bold pt-2 ${ttt.is_correct ? 'text-emerald-600' : 'text-rose-600'}`;
+
+      const ucP = Math.round(uc.prob_rumour * 100);
+      document.getElementById("uc-pred-label").innerText = uc.label_name;
+      document.getElementById("uc-pred-label").className = `px-3 py-1 rounded-full text-xs font-bold ${uc.label === 1 ? 'bg-rose-500/20 text-rose-600' : 'bg-emerald-500/20 text-emerald-600'}`;
+      document.getElementById("uc-p-rumour").innerText = `${(uc.prob_rumour * 100).toFixed(1)}%`;
+      document.getElementById("uc-p-non").innerText = `${(uc.prob_non_rumour * 100).toFixed(1)}%`;
+      document.getElementById("uc-bar-rumour").style.width = `${ucP}%`;
+      document.getElementById("uc-bar-non").style.width = `${100 - ucP}%`;
+      document.getElementById("uc-correct-badge").innerText = uc.is_correct ? "✅ Trùng khớp Nhãn Thực tế" : "❌ Sai lệch so với Nhãn Thực tế";
+      document.getElementById("uc-correct-badge").className = `text-center text-xs font-bold pt-2 ${uc.is_correct ? 'text-emerald-600' : 'text-rose-600'}`;
+
+      // Section 3: Gate Alpha
+      const interp = c.interpretability;
+      document.getElementById("gate-user-pct").innerText = `${interp.user_weight_pct}%`;
+      document.getElementById("gate-text-pct").innerText = `${interp.text_weight_pct}%`;
+      document.getElementById("gate-user-bar").style.width = `${interp.user_weight_pct}%`;
+      document.getElementById("gate-text-bar").style.width = `${interp.text_weight_pct}%`;
+      document.getElementById("gate-explanation").innerText = `💡 ${interp.explanation_text}`;
+
+      // 12 Features
+      const tbFeat = document.getElementById("features-table-body");
+      tbFeat.innerHTML = "";
+      (c.features_12 || []).forEach(f => {
+        const tr = document.createElement("tr");
+        tr.className = "text-[11px]";
+        tr.innerHTML = `<td class="p-1 font-semibold text-[var(--muted)]">${f.group}</td><td class="p-1 font-medium">${f.name}</td><td class="p-1">${f.val_str}</td><td class="p-1 font-mono">${f.log_val}</td><td class="p-1 font-semibold">${f.impact}</td>`;
+        tbFeat.appendChild(tr);
+      });
+
+      // Section 4: Timeline & SVG Chart
+      renderTimeline(c.timeline);
+    }
+
+    function renderTimeline(timeline) {
+      const tttList = timeline.ttt || [];
+      const ucList = timeline.ucttt || [];
+      const n = ucList.length;
+
+      // Render milestones cards
+      const msContainer = document.getElementById("milestones-list");
+      msContainer.innerHTML = "";
+      ucList.forEach((pt, i) => {
+        const tttPt = tttList[i] || { prob_rumour: 0 };
+        const pUc = (pt.prob_rumour * 100).toFixed(1);
+        const pTtt = (tttPt.prob_rumour * 100).toFixed(1);
+        const card = document.createElement("div");
+        card.className = `p-2.5 rounded-lg border-l-4 bg-[var(--card)] border border-[var(--border)] ${pt.prob_rumour >= 0.5 ? 'border-l-rose-500' : 'border-l-emerald-500'}`;
+        card.innerHTML = `<div class="font-bold">Mốc ${pt.elapsed_label} (${pt.cum_posts} bài):</div><div class="text-[11px] space-y-0.5 mt-0.5"><div>• UC-TTT: <b>${pUc}%</b> (${pt.prob_rumour >= 0.5 ? '🔴 Báo động' : '🟢 An toàn'})</div><div>• TTT Gốc: <b>${pTtt}%</b></div></div>`;
+        msContainer.appendChild(card);
+      });
+
+      // Draw SVG chart
+      const w = 500, h = 200, padX = 40, padY = 25;
+      const chartW = w - padX * 2;
+      const chartH = h - padY * 2;
+
+      let ptsUc = "", ptsTtt = "";
+      const stepX = n > 1 ? chartW / (n - 1) : chartW / 2;
+
+      ucList.forEach((pt, i) => {
+        const x = padX + (n > 1 ? i * stepX : chartW / 2);
+        const yUc = padY + chartH * (1.0 - pt.prob_rumour);
+        ptsUc += `${i === 0 ? 'M' : 'L'} ${x} ${yUc} `;
+      });
+
+      tttList.forEach((pt, i) => {
+        const x = padX + (n > 1 ? i * stepX : chartW / 2);
+        const yTtt = padY + chartH * (1.0 - pt.prob_rumour);
+        ptsTtt += `${i === 0 ? 'M' : 'L'} ${x} ${yTtt} `;
+      });
+
+      const thresholdY = padY + chartH * 0.5;
+
+      let circles = "";
+      ucList.forEach((pt, i) => {
+        const x = padX + (n > 1 ? i * stepX : chartW / 2);
+        const yUc = padY + chartH * (1.0 - pt.prob_rumour);
+        const yTtt = padY + chartH * (1.0 - tttList[i].prob_rumour);
+        circles += `<circle cx="${x}" cy="${yUc}" r="4" fill="#2563eb" /><text x="${x}" y="${yUc - 8}" font-size="10" text-anchor="middle" fill="#2563eb" font-weight="bold">${(pt.prob_rumour * 100).toFixed(0)}%</text>`;
+        circles += `<circle cx="${x}" cy="${yTtt}" r="4" fill="#ea580c" /><text x="${x}" y="${yTtt + 14}" font-size="10" text-anchor="middle" fill="#ea580c" font-weight="bold">${(tttList[i].prob_rumour * 100).toFixed(0)}%</text>`;
+        circles += `<text x="${x}" y="${h - 6}" font-size="10" text-anchor="middle" fill="currentColor">${pt.elapsed_label}</text>`;
+      });
+
+      const svg = `
+        <svg viewBox="0 0 ${w} ${h}" class="w-full h-full text-[var(--muted)]">
+          <!-- Grid lines -->
+          <line x1="${padX}" y1="${padY}" x2="${w - padX}" y2="${padY}" stroke="currentColor" stroke-opacity="0.15" />
+          <line x1="${padX}" y1="${padY + chartH * 0.5}" x2="${w - padX}" y2="${padY + chartH * 0.5}" stroke="#ef4444" stroke-dasharray="4" stroke-opacity="0.6" />
+          <line x1="${padX}" y1="${h - padY}" x2="${w - padX}" y2="${h - padY}" stroke="currentColor" stroke-opacity="0.2" />
+          
+          <!-- Y Labels -->
+          <text x="${padX - 8}" y="${padY + 4}" font-size="9" text-anchor="end" fill="currentColor">100%</text>
+          <text x="${padX - 8}" y="${thresholdY + 3}" font-size="9" text-anchor="end" fill="#ef4444" font-weight="bold">50%</text>
+          <text x="${padX - 8}" y="${h - padY + 3}" font-size="9" text-anchor="end" fill="currentColor">0%</text>
+          
+          <!-- Lines -->
+          <path d="${ptsTtt}" fill="none" stroke="#ea580c" stroke-width="2.5" />
+          <path d="${ptsUc}" fill="none" stroke="#2563eb" stroke-width="2.5" />
+          
+          <!-- Dots & Labels -->
+          ${circles}
+        </svg>
+      `;
+
+      document.getElementById("chart-container").innerHTML = svg;
+    }
+
+    // Init
+    renderButtons();
+    selectCase(0);
+  </script>
+</body>
+</html>
