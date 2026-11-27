@@ -15,40 +15,71 @@
 ```
 PJ/
 ├── data/
-│   ├── raw/                 # Nơi lưu archive gốc PHEME_veracity.tar.bz2
-│   └── processed/           # Cache dữ liệu đã tiền xử lý: pheme_processed.pkl, text_embeddings.pt
+│   ├── raw/                                # Nơi lưu archive gốc PHEME_veracity.tar.bz2
+│   └── processed/                          # Cache tiền xử lý: pheme_processed.pkl, text_embeddings_bert.pt
 ├── src/
 │   ├── data/
-│   │   ├── pheme_parser.py           # Parser bóc tách threads, tweets, trees từ PHEME
-│   │   ├── tree_builder.py           # Dựng quan hệ cây lan truyền & metrics cấu trúc
-│   │   ├── user_feature_builder.py   # Trích xuất 12 đặc trưng User Credibility (3 nhóm)
-│   │   └── dataset.py                # PyTorch Dataset & dynamic batch collate function
+│   │   ├── pheme_parser.py                 # Parser bóc tách threads, tweets, trees từ PHEME
+│   │   ├── tree_builder.py                 # Dựng quan hệ cây lan truyền & metrics cấu trúc
+│   │   ├── user_feature_builder.py         # Trích xuất 12 đặc trưng User Credibility (3 nhóm)
+│   │   ├── dataset.py                      # PyTorch Dataset & dynamic batch collate function
+│   │   └── export_summaries.py             # Xuất thống kê tổng hợp bộ dữ liệu PHEME
 │   ├── models/
-│   │   ├── user_encoder.py           # MLP & Gated Fusion cho User Credibility
-│   │   ├── tree_transformer.py       # Tree Transformer Attention Layer
-│   │   ├── temporal_gru.py           # Temporal GRU tổng hợp lát cắt thời gian
-│   │   └── ucttt_classifier.py       # End-to-end model UC-TTT & TTT Baseline
+│   │   ├── user_encoder.py                 # MLP & Fusion (gated / residual_gate / concat / bilinear)
+│   │   ├── tree_transformer.py             # Tree Transformer Attention Layer
+│   │   ├── temporal_gru.py                 # Temporal GRU tổng hợp lát cắt thời gian
+│   │   └── ucttt_classifier.py             # End-to-end model UC-TTT & TTT Baseline
 │   ├── training/
-│   │   ├── engine.py                 # Training loop, evaluation & EarlyStopping
-│   │   └── metrics.py                # Tính Loss, Acc, Precision, Recall, Macro-F1
+│   │   ├── __init__.py
+│   │   ├── engine.py                       # Training loop, evaluation & EarlyStopping (loss_stabilize)
+│   │   └── metrics.py                      # Tính Loss, Acc, Precision, Recall, Macro-F1 từ tensors
 │   ├── baselines/
-│   │   ├── tfidf_lr.py               # Baseline 1: TF-IDF + Logistic Regression
-│   │   └── propagation_rf.py         # Baseline 2: Propagation Features + Random Forest
+│   │   ├── tfidf_lr.py                     # Baseline B1a/B1b: TF-IDF + Logistic Regression
+│   │   ├── propagation_rf.py               # Baseline B2: Propagation Features + Random Forest
+│   │   └── tabular_xgboost.py              # Baseline B2b: Tabular Features + XGBoost
 │   └── utils/
-│       ├── metrics.py                # Tính Accuracy, Macro-F1, Precision, Recall
-│       └── loeo_splitter.py          # Bộ chia 9-fold Leave-One-Event-Out (LOEO)
+│       ├── metrics.py                      # Tính Accuracy, Macro-F1, Precision, Recall
+│       └── loeo_splitter.py                # Bộ chia 5-fold / 9-fold Leave-One-Event-Out (LOEO)
 ├── experiments/
-│   ├── preprocess_pheme.py           # Script tiền xử lý và đóng gói dataset
-│   ├── extract_text_embeddings.py    # Script trích xuất offline sentence embeddings (MiniLM)
-│   ├── run_baselines.py              # Script chạy benchmark Baseline 1 & 2
-│   ├── train_ttt_baseline.py         # Script huấn luyện 9-fold LOEO Baseline 3 (Original TTT)
-│   └── run_ucttt_experiment.py       # Script huấn luyện & đánh giá UC-TTT
+│   ├── preprocess_pheme.py                 # Script tiền xử lý và đóng gói dataset PHEME
+│   ├── extract_text_embeddings.py          # Trích xuất offline 768-d BERT embeddings (Max-Pooling)
+│   ├── run_baselines.py                    # Chạy benchmark Baselines B1a/B1b/B2/B2b (5,447 threads)
+│   ├── train_ttt_baseline.py               # Huấn luyện LOEO Baseline: Original TTT (Wu et al. 2025)
+│   ├── train_ucttt.py                      # Huấn luyện & đánh giá mô hình đề xuất UC-TTT
+│   ├── run_ablation.py                     # Chuỗi thực nghiệm bóc tách Feature & Architecture (9 biến thể)
+│   ├── run_paper_sync_benchmarks.py        # Chạy đối chứng đồng bộ TTT vs UC-TTT chuẩn bài báo
+│   ├── run_comprehensive_error_analysis.py # Phân tích lỗi sai & Trade-off theo sự kiện
+│   ├── plot_ablation_results.py            # Vẽ biểu đồ kết quả Ablation Studies (300 DPI)
+│   ├── test_all_preset_predictions.py      # Kiểm thử suy luận trên các case mẫu của demo
+│   └── verify_repo_integrity.py            # Kiểm tra đồng bộ dữ liệu, checkpoints và JSON kết quả
+├── demo/                                   # Ứng dụng Demo & Inference tương tác (PHEME 5 sự kiện)
+│   ├── app.py                              # Giao diện ứng dụng demo
+│   ├── inference_engine.py                 # Pipeline suy luận live cho UC-TTT & biến thể Ablation
+│   ├── build_html_prototype.py             # Sinh trang demo HTML tĩnh (demo_prototype.html)
+│   ├── preset_cases.py                     # Các tình huống mẫu minh họa
+│   ├── utils.py                            # Hàm tiện ích tiền xử lý cho demo
+│   └── test_engine.py                      # Kiểm thử inference engine
+├── notebooks/
+│   └── PHEME_UCTTT_Colab_Training.ipynb    # Notebook chạy UC-TTT & Ablation trên Google Colab
 ├── tests/
-│   └── test_dataloader.py            # Unit test cho dynamic batching & time window collate
-├── results/                          # Chứa kết quả thực nghiệm dạng JSON và log
-│   ├── baseline_results.json         # Kết quả Baseline 1 & Baseline 2
-│   └── ttt_baseline_results.json     # Kết quả Baseline 3 (Original TTT 9 folds)
-├── requirements.txt                  # Các thư viện phụ thuộc
+│   ├── test_dataloader.py                  # Unit test cho dynamic batching & time window collate
+│   ├── test_reimplemented_ttt.py           # Unit test xác minh kiến trúc tái hiện TTT
+│   └── test_ablation.py                    # Unit test cho các cấu hình Ablation Studies
+├── results/                                # Chứa kết quả thực nghiệm JSON, phân tích lỗi & biểu đồ
+│   ├── baseline_results.json               # Kết quả Baselines B1a, B1b, B2, B2b (5,447 threads)
+│   ├── ttt_baseline_results.json           # Kết quả Original TTT (5 folds LOEO, 5,447 threads)
+│   ├── paper_sync_comparison.json          # Bảng tổng hợp đối chứng đồng bộ TTT vs UC-TTT
+│   ├── ucttt/                              # Kết quả huấn luyện UC-TTT
+│   ├── ablation/                           # Kết quả JSON 9 biến thể Ablation & ablation_summary.json
+│   ├── analysis/                           # Báo cáo phân tích lỗi (ERROR_ANALYSIS_AND_TRADE_OFF_REPORT.md)
+│   └── figures/                            # Biểu đồ kiến trúc & kết quả thực nghiệm
+├── scripts/                                # Script bảo trì repo & template GitHub Issues
+├── archive/                                # Lưu trữ báo cáo, proposal nháp, tài liệu tham khảo & script cũ
+│   ├── reports/                            # Báo cáo giữa kỳ, cuối kỳ & file tổng hợp kết quả (.docx/.pdf)
+│   ├── proposals/                          # Các phiên bản Mini Proposal & template
+│   ├── references/                         # Slide bài giảng & tài liệu tham khảo môn học
+│   └── legacy/                             # Script prototype/chạy lẻ cũ & ghi chú nháp
+├── requirements.txt                        # Các thư viện phụ thuộc
 └── README.md
 ```
 
