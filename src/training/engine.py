@@ -25,7 +25,8 @@ class EarlyStopping:
         min_delta: float = 1e-4,
         mode: str = "loss_stabilize",
         stabilize_threshold: float = 0.015,
-        min_epochs: int = 3,
+        min_epochs: int = 5,
+        consecutive_stable: int = 2,
         save_path: Optional[str] = None,
     ):
         self.patience = patience
@@ -33,6 +34,7 @@ class EarlyStopping:
         self.mode = mode
         self.stabilize_threshold = stabilize_threshold
         self.min_epochs = min_epochs
+        self.consecutive_stable = consecutive_stable
         self.save_path = save_path
 
         self.counter = 0
@@ -43,6 +45,7 @@ class EarlyStopping:
 
         # Lịch sử theo dõi cho loss_stabilize
         self.history: List[float] = []
+        self.stable_streak = 0
         self.stabilized = False
         self.stabilized_epoch: Optional[int] = None
         self.stabilized_loss: Optional[float] = None
@@ -65,15 +68,21 @@ class EarlyStopping:
                 self.min_loss_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
 
             # Kiểm tra điều kiện bắt đầu ổn định theo Wu et al. 2025:
-            # 1. Đã qua giai đoạn khởi tạo ban đầu (min_epochs)
-            # 2. Chưa từng đánh dấu stabilize trước đó (chọn thời điểm 'just started to stabilize')
+            # 1. Đã qua giai đoạn khởi tạo ban đầu (min_epochs=5)
+            # 2. Loss ổn định đủ consecutive_stable (2) epoch liên tiếp để tránh khóa nhầm vì nhiễu 1 nhịp
             if ep >= self.min_epochs and not self.stabilized and len(self.history) >= 2:
                 prev_loss = self.history[-2]
                 rel_decrease = (prev_loss - val_loss) / (abs(prev_loss) + 1e-8)
 
                 # Điểm ổn định: độ giảm loss chậm lại rõ rệt (dưới ngưỡng stabilize_threshold, ví dụ < 1.5%)
                 # và val_loss không bị bùng nổ phân kỳ so với mức thấp nhất đạt được (trong phạm vi 5%)
-                is_stabilizing = (rel_decrease < self.stabilize_threshold) and (val_loss <= self.min_loss * 1.05)
+                step_stable = (rel_decrease < self.stabilize_threshold) and (val_loss <= self.min_loss * 1.05)
+                if step_stable:
+                    self.stable_streak += 1
+                else:
+                    self.stable_streak = 0
+
+                is_stabilizing = self.stable_streak >= self.consecutive_stable
 
                 if is_stabilizing:
                     self.stabilized = True
@@ -89,9 +98,9 @@ class EarlyStopping:
                         torch.save(self.best_model_state, self.save_path)
 
                     print(
-                        f"\n  [*] [Wu et al. 2025 Checkpoint Selection] Validation loss bat dau on dinh tai Epoch {ep} "
+                        f"\n  [*] [Wu et al. 2025 Checkpoint Selection] Validation loss on dinh {self.consecutive_stable} epoch lien tiep tai Epoch {ep} "
                         f"(Loss: {val_loss:.4f}, Rel Change: {rel_decrease * 100:.2f}% < {self.stabilize_threshold * 100:.1f}%). "
-                        f"Da khoa checkpoint nay theo khuyen nghi tac gia!"
+                        f"Da khoa checkpoint nay!"
                     )
 
             # Quản lý Early Stopping
