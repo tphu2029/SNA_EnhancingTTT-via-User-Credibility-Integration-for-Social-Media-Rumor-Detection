@@ -608,6 +608,7 @@ def parse_args():
     )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--folds", type=str, default="all", help="'all' hoặc chỉ số fold (ví dụ '0,1')")
+    parser.add_argument("--min_reactions", type=int, default=1, help="Số phản hồi tối thiểu để giữ thread (mặc định 1 chuẩn Wu et al. 2025: 5,447 threads)")
     parser.add_argument("--save_checkpoints", action="store_true", default=True)
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     return parser.parse_args()
@@ -637,7 +638,9 @@ def main():
 
     events_list = PHEME_5_EVENTS if args.events_mode == "5" else PHEME_9_EVENTS
     threads = [th for th in threads_raw if th["event"] in events_list]
-    print(f"Đã nạp {len(threads)} threads từ {len(events_list)} sự kiện: {', '.join(events_list)}")
+    if args.min_reactions > 0:
+        threads = [th for th in threads if len(th.get("reactions", [])) >= args.min_reactions]
+    print(f"Đã nạp {len(threads)} threads (min_reactions={args.min_reactions}) từ {len(events_list)} sự kiện: {', '.join(events_list)}")
 
     # 2. Đọc text embeddings
     emb_path = Path(args.embeddings_path)

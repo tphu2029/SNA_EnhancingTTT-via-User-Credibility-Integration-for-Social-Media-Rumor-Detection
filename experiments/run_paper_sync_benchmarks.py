@@ -30,14 +30,7 @@ def run_command(cmd, desc):
 
 def build_comparison_table(fusion_type="residual_gate"):
     ttt_path = ROOT / "results/ttt_baseline_results.json"
-    if not ttt_path.exists():
-        ttt_path = ROOT / "results/ttt_baseline/ttt_baseline_results.json"
-
     ucttt_path = ROOT / f"results/ucttt/ucttt_{fusion_type}_events5_results.json"
-    if not ucttt_path.exists():
-        ucttt_path = ROOT / f"results/ucttt_{fusion_type}_events5_results.json"
-    if not ucttt_path.exists():
-        ucttt_path = ROOT / "results/ucttt/ucttt_gated_events5_results.json"
 
     if not ttt_path.exists():
         print(f"Không tìm thấy file kết quả TTT: {ttt_path}")
@@ -239,7 +232,7 @@ def main():
     run_command(cmd_ucttt, f"LẦN 2: HUẤN LUYỆN UC-TTT PROPOSED (BẬT USER CREDIBILITY - {args.fusion_type.upper()})")
 
     # 3. Tổng hợp và in bảng so sánh
-    build_comparison_table(fusion_type=args.fusion_type)
+    build_comparison_table(args.fusion_type)
 
 
 if __name__ == "__main__":
