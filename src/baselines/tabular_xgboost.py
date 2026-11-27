@@ -101,7 +101,7 @@ class TabularXGBoostBaseline:
 
         return np.concatenate([src_feat, react_mean, prop_feats, txt_feats]).astype(np.float32)
 
-    def evaluate_loeo(self, dataset: List[Dict[str, Any]], events_mode: str = "5") -> Dict[str, Any]:
+    def evaluate_loeo(self, dataset: List[Dict[str, Any]], events_mode: str = "5", min_reactions: int = 1) -> Dict[str, Any]:
         """
         Đánh giá Leave-One-Event-Out:
           - events_mode='5': Chỉ chạy trên 5 sự kiện chuẩn (PHEME v5).
@@ -112,6 +112,8 @@ class TabularXGBoostBaseline:
             target_dataset = [r for r in dataset if r["event"] in PHEME_5_EVENTS]
         else:
             target_dataset = dataset
+        if min_reactions > 0:
+            target_dataset = [r for r in target_dataset if len(r.get("reactions", [])) >= min_reactions]
 
         events = [r["event"] for r in target_dataset]
         folds = get_loeo_folds(events)

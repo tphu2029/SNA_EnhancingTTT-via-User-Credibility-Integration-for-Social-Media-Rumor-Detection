@@ -156,6 +156,7 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--folds", type=str, default="all", help="'all' hoặc chỉ số fold cụ thể (ví dụ '0,1')")
+    parser.add_argument("--min_reactions", type=int, default=1, help="Số phản hồi tối thiểu để giữ thread (mặc định 1 chuẩn Wu et al. 2025: 5,447 threads)")
     parser.add_argument("--save_checkpoints", action="store_true", default=True)
     parser.add_argument(
         "--baseline_results_path",
@@ -198,6 +199,10 @@ def main():
         print(f"Lọc PHEME v5 (5 sự kiện đối chứng Wu et al. 2025): {len(threads):,} threads.")
     else:
         print(f"Sử dụng full PHEME (9 sự kiện): {len(threads):,} threads.")
+
+    if args.min_reactions > 0:
+        threads = [th for th in threads if len(th.get("reactions", [])) >= args.min_reactions]
+        print(f"Lọc min_reactions >= {args.min_reactions} (chuẩn cây lan truyền Wu et al. 2025): còn {len(threads):,} threads.")
 
     print(f"Loaded {len(embeddings):,} embeddings tensors.")
 
@@ -471,11 +476,11 @@ def main():
     with open(root_events_file, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
 
-    # Nếu là mô hình chính (gated, mode 5), đồng thời lưu file chuẩn ucttt_results.json
-    if args.fusion_type == "gated" and args.events_mode == "5":
-        root_results_file = str(ROOT / "results/ucttt_results.json")
-        with open(root_results_file, "w", encoding="utf-8") as f:
-            json.dump(summary, f, indent=2, ensure_ascii=False)
+    # Đồng thời lưu file chuẩn results/ucttt_results.json và results/ucttt/ucttt_results.json khi mode 5
+    if args.events_mode == "5":
+        for rp in [str(ROOT / "results/ucttt_results.json"), os.path.join(args.output_dir, "ucttt_results.json")]:
+            with open(rp, "w", encoding="utf-8") as f:
+                json.dump(summary, f, indent=2, ensure_ascii=False)
 
     print("\n" + "=" * 80)
     print(f" TỔNG KẾT BENCHMARK LOEO: UC-TTT (Fusion Strategy: {args.fusion_type.upper()})")

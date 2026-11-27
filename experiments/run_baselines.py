@@ -38,39 +38,39 @@ def main():
 
     results = {}
     
-    # Baseline 1a: TF-IDF + LR (Source only)
-    print(">>> Đang chạy Baseline 1a: TF-IDF + Logistic Regression (Source Tweet Only)...")
+    # Baseline 1a: TF-IDF + LR (Source only, PHEME v5 - 5 events, >=1 reaction -> 5,447 threads)
+    print(">>> Đang chạy Baseline 1a: TF-IDF + Logistic Regression (Source Tweet Only, 5 Events, 5,447 threads)...")
     b1_source = TfidfLogisticRegressionBaseline(include_reactions=False)
-    res_b1_source = b1_source.evaluate_loeo(dataset)
+    res_b1_source = b1_source.evaluate_loeo(dataset, events_mode="5", min_reactions=1)
     print_result_table(res_b1_source)
     results["baseline1_source_lr"] = res_b1_source
 
-    # Baseline 1b: TF-IDF + LR (Source + Reactions)
-    print("\n>>> Đang chạy Baseline 1b: TF-IDF + Logistic Regression (Source + Reactions)...")
+    # Baseline 1b: TF-IDF + LR (Source + Reactions, PHEME v5 - 5 events, 5,447 threads)
+    print("\n>>> Đang chạy Baseline 1b: TF-IDF + Logistic Regression (Source + Reactions, 5 Events, 5,447 threads)...")
     b1_all = TfidfLogisticRegressionBaseline(include_reactions=True)
-    res_b1_all = b1_all.evaluate_loeo(dataset)
+    res_b1_all = b1_all.evaluate_loeo(dataset, events_mode="5", min_reactions=1)
     print_result_table(res_b1_all)
     results["baseline1_all_lr"] = res_b1_all
 
-    # Baseline 2: Propagation Features + Random Forest
-    print("\n>>> Đang chạy Baseline 2: Propagation Features + Random Forest...")
+    # Baseline 2: Propagation Features + Random Forest (PHEME v5 - 5 events, 5,447 threads)
+    print("\n>>> Đang chạy Baseline 2: Propagation Features + Random Forest (5 Events, 5,447 threads)...")
     b2 = PropagationRandomForestBaseline(n_estimators=200, max_depth=12)
-    res_b2 = b2.evaluate_loeo(dataset)
+    res_b2 = b2.evaluate_loeo(dataset, events_mode="5", min_reactions=1)
     print_result_table(res_b2)
     results["baseline2_prop_rf"] = res_b2
 
-    # Baseline 2b: Tabular Features + XGBoost (PHEME v5 - 5 events)
-    print("\n>>> Đang chạy Baseline 2b: Tabular Features + XGBoost (PHEME v5 - 5 Events)...")
+    # Baseline 2b: Tabular Features + XGBoost (PHEME v5 - 5 events, 5,447 threads)
+    print("\n>>> Đang chạy Baseline 2b: Tabular Features + XGBoost (PHEME v5 - 5 Events, 5,447 threads)...")
     from src.baselines.tabular_xgboost import TabularXGBoostBaseline
     b2b_5 = TabularXGBoostBaseline(n_estimators=100, max_depth=5, learning_rate=0.05)
-    res_b2b_5 = b2b_5.evaluate_loeo(dataset, events_mode="5")
+    res_b2b_5 = b2b_5.evaluate_loeo(dataset, events_mode="5", min_reactions=1)
     print_result_table(res_b2b_5)
     results["baseline2b_tabular_xgboost_5events"] = res_b2b_5
 
     # Baseline 2b: Tabular Features + XGBoost (Full PHEME - 9 events)
     print("\n>>> Đang chạy Baseline 2b: Tabular Features + XGBoost (Full PHEME - 9 Events)...")
     b2b_9 = TabularXGBoostBaseline(n_estimators=100, max_depth=5, learning_rate=0.05)
-    res_b2b_9 = b2b_9.evaluate_loeo(dataset, events_mode="9")
+    res_b2b_9 = b2b_9.evaluate_loeo(dataset, events_mode="9", min_reactions=1)
     print_result_table(res_b2b_9)
     results["baseline2b_tabular_xgboost_9events"] = res_b2b_9
 

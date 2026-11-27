@@ -29,8 +29,16 @@ class TfidfLogisticRegressionBaseline:
         reaction_texts = [r.get("text", "") for r in record.get("reactions", [])]
         return source_text + " " + " ".join(reaction_texts)
 
-    def evaluate_loeo(self, dataset: List[Dict[str, Any]]) -> Dict[str, Any]:
-        events = [r["event"] for r in dataset]
+    def evaluate_loeo(self, dataset: List[Dict[str, Any]], events_mode: str = "5", min_reactions: int = 1) -> Dict[str, Any]:
+        PHEME_5_EVENTS = ["charliehebdo", "sydneysiege", "ferguson", "ottawashooting", "germanwings-crash"]
+        if events_mode == "5":
+            target_dataset = [r for r in dataset if r["event"] in PHEME_5_EVENTS]
+        else:
+            target_dataset = dataset
+        if min_reactions > 0:
+            target_dataset = [r for r in target_dataset if len(r.get("reactions", [])) >= min_reactions]
+
+        events = [r["event"] for r in target_dataset]
         folds = get_loeo_folds(events)
         
         fold_results = []
@@ -39,7 +47,7 @@ class TfidfLogisticRegressionBaseline:
         
         for fold in folds:
             test_ev = fold["test_event"]
-            train_data, val_data, test_data = split_dataset_by_loeo_fold(dataset, fold)
+            train_data, val_data, test_data = split_dataset_by_loeo_fold(target_dataset, fold)
             
             # Combine train and val for final fit on the fold
             train_full = train_data + val_data
@@ -79,7 +87,8 @@ class TfidfLogisticRegressionBaseline:
         accuracies = [f["accuracy"] for f in fold_results]
         
         return {
-            "model_name": f"TF-IDF + Logistic Regression ({'Source+Reactions' if self.include_reactions else 'Source-only'})",
+            "model_name": f"TF-IDF + Logistic Regression ({'Source+Reactions' if self.include_reactions else 'Source-only'}, PHEME {events_mode} Events)",
+            "events_mode": events_mode,
             "overall_pooled_metrics": overall_metrics,
             "mean_macro_f1": float(np.mean(macro_f1_scores)),
             "std_macro_f1": float(np.std(macro_f1_scores)),
