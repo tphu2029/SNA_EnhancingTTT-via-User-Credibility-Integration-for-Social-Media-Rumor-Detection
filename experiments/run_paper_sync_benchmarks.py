@@ -28,9 +28,16 @@ def run_command(cmd, desc):
     print(f"\n[HOÀN THÀNH] {desc} trong {elapsed:.1f}s ({elapsed / 60:.2f} phút).")
 
 
-def build_comparison_table():
+def build_comparison_table(fusion_type="residual_gate"):
     ttt_path = ROOT / "results/ttt_baseline_results.json"
-    ucttt_path = ROOT / "results/ucttt/ucttt_gated_events5_results.json"
+    if not ttt_path.exists():
+        ttt_path = ROOT / "results/ttt_baseline/ttt_baseline_results.json"
+
+    ucttt_path = ROOT / f"results/ucttt/ucttt_{fusion_type}_events5_results.json"
+    if not ucttt_path.exists():
+        ucttt_path = ROOT / f"results/ucttt_{fusion_type}_events5_results.json"
+    if not ucttt_path.exists():
+        ucttt_path = ROOT / "results/ucttt/ucttt_gated_events5_results.json"
 
     if not ttt_path.exists():
         print(f"Không tìm thấy file kết quả TTT: {ttt_path}")
@@ -160,6 +167,7 @@ def build_comparison_table():
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Chạy đối chứng chuẩn bài báo Wu et al. 2025: TTT Baseline vs UC-TTT")
+    parser.add_argument("--events_mode", default="5", choices=["5", "9"], help="Chế độ sự kiện (5 hoặc 9)")
     parser.add_argument("--embeddings_path", default="data/processed/text_embeddings_bert.pt" if (ROOT / "data/processed/text_embeddings_bert.pt").exists() else "data/processed/text_embeddings.pt",
                         help="Đường dẫn file text embeddings")
     parser.add_argument("--window_mode", default="fixed_posts", choices=["fixed_posts", "fixed_windows"],
@@ -184,9 +192,10 @@ def main():
     # 1. Chạy Lần 1: TTT Baseline gốc (Wu et al. 2025)
     cmd_ttt = [
         py_exec,
+        "-u",
         str(ROOT / "experiments/train_ttt_baseline.py"),
         "--embeddings_path", args.embeddings_path,
-        "--events_mode", "5",
+        "--events_mode", str(args.events_mode),
         "--window_mode", args.window_mode,
         "--window_size", str(args.window_size),
         "--d_model", "768",
@@ -207,9 +216,10 @@ def main():
     # 2. Chạy Lần 2: UC-TTT Proposed (bật User Credibility với Gated/Residual-Gate Fusion)
     cmd_ucttt = [
         py_exec,
+        "-u",
         str(ROOT / "experiments/train_ucttt.py"),
         "--embeddings_path", args.embeddings_path,
-        "--events_mode", "5",
+        "--events_mode", str(args.events_mode),
         "--window_mode", args.window_mode,
         "--window_size", str(args.window_size),
         "--fusion_type", args.fusion_type,
@@ -229,7 +239,7 @@ def main():
     run_command(cmd_ucttt, f"LẦN 2: HUẤN LUYỆN UC-TTT PROPOSED (BẬT USER CREDIBILITY - {args.fusion_type.upper()})")
 
     # 3. Tổng hợp và in bảng so sánh
-    build_comparison_table()
+    build_comparison_table(fusion_type=args.fusion_type)
 
 
 if __name__ == "__main__":
