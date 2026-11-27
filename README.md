@@ -80,7 +80,7 @@ python experiments/extract_text_embeddings.py --batch_size 256
 pytest tests/test_dataloader.py -v
 ```
 
-### 2.5. Chạy Baselines truyền thống (9-fold LOEO)
+### 2.5. Chạy Baselines truyền thống (5-fold LOEO)
 ```bash
 python experiments/run_baselines.py
 ```
