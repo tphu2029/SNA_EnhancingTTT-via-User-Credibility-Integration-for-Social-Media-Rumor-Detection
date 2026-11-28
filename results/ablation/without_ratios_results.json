@@ -9,26 +9,26 @@
   "events_mode": "5",
   "num_folds": 5,
   "mean_loeo": {
-    "accuracy": 0.7355403879885163,
-    "accuracy_std": 0.05200071285614582,
-    "macro_f1": 0.7029996296413324,
-    "macro_f1_std": 0.040195555487268476
+    "accuracy": 0.7196321235566671,
+    "accuracy_std": 0.05309619941804806,
+    "macro_f1": 0.687850287822279,
+    "macro_f1_std": 0.04092280564949612
   },
   "pooled": {
-    "accuracy": 0.7566356428817649,
-    "macro_f1": 0.7255735958650584,
-    "macro_precision": 0.7285993786089047,
-    "macro_recall": 0.7230457475148158,
+    "accuracy": 0.7442628970075271,
+    "macro_f1": 0.7078937738985149,
+    "macro_precision": 0.715413938419914,
+    "macro_recall": 0.7029503704662219,
     "class_metrics": {
       "Non-rumour": {
-        "precision": 0.8081039755351682,
-        "recall": 0.8279373368146214,
-        "f1": 0.8179004384833635
+        "precision": 0.7894319682959049,
+        "recall": 0.8337053571428571,
+        "f1": 0.8109648527615687
       },
       "Rumour": {
-        "precision": 0.6490947816826411,
-        "recall": 0.6181541582150102,
-        "f1": 0.6332467532467533
+        "precision": 0.641395908543923,
+        "recall": 0.5721953837895867,
+        "f1": 0.604822695035461
       }
     }
   },
@@ -36,54 +36,54 @@
     {
       "fold_idx": 0,
       "test_event": "charliehebdo",
-      "accuracy": 0.8364598364598365,
-      "macro_f1": 0.7645401127233481,
-      "rumour_precision": 0.625,
-      "rumour_recall": 0.6441048034934498,
-      "rumour_f1": 0.6344086021505376,
-      "non_rumour_f1": 0.8946716232961586
+      "accuracy": 0.8211788211788211,
+      "macro_f1": 0.7604510785644096,
+      "rumour_precision": 0.5813528336380256,
+      "rumour_recall": 0.7114093959731543,
+      "rumour_f1": 0.6398390342052314,
+      "non_rumour_f1": 0.881063122923588
     },
     {
       "fold_idx": 1,
       "test_event": "sydneysiege",
-      "accuracy": 0.7125307125307125,
-      "macro_f1": 0.6794956838174753,
-      "rumour_precision": 0.7785016286644951,
-      "rumour_recall": 0.4578544061302682,
-      "rumour_f1": 0.5765983112183354,
-      "non_rumour_f1": 0.782393056416615
+      "accuracy": 0.7050298380221653,
+      "macro_f1": 0.6770970575318401,
+      "rumour_precision": 0.7347560975609756,
+      "rumour_recall": 0.482,
+      "rumour_f1": 0.5821256038647343,
+      "non_rumour_f1": 0.7720685111989459
     },
     {
       "fold_idx": 2,
       "test_event": "ferguson",
-      "accuracy": 0.7042869641294838,
-      "macro_f1": 0.6491827394573391,
-      "rumour_precision": 0.43349753694581283,
-      "rumour_recall": 0.6197183098591549,
-      "rumour_f1": 0.5101449275362319,
-      "non_rumour_f1": 0.7882205513784462
+      "accuracy": 0.7029702970297029,
+      "macro_f1": 0.6401493558317182,
+      "rumour_precision": 0.4350453172205438,
+      "rumour_recall": 0.5603112840466926,
+      "rumour_f1": 0.4897959183673469,
+      "non_rumour_f1": 0.7905027932960894
     },
     {
       "fold_idx": 3,
       "test_event": "ottawashooting",
-      "accuracy": 0.7314606741573034,
-      "macro_f1": 0.7298368301328906,
-      "rumour_precision": 0.7361963190184049,
-      "rumour_recall": 0.7659574468085106,
-      "rumour_f1": 0.7507820646506778,
-      "non_rumour_f1": 0.7088915956151035
+      "accuracy": 0.704784130688448,
+      "macro_f1": 0.6982616936623002,
+      "rumour_precision": 0.8722627737226277,
+      "rumour_recall": 0.5229759299781181,
+      "rumour_f1": 0.6538987688098495,
+      "non_rumour_f1": 0.7426246185147508
     },
     {
       "fold_idx": 4,
       "test_event": "germanwings-crash",
-      "accuracy": 0.6929637526652452,
-      "macro_f1": 0.6919427820756094,
-      "rumour_precision": 0.7303921568627451,
-      "rumour_recall": 0.6260504201680672,
-      "rumour_f1": 0.6742081447963801,
-      "non_rumour_f1": 0.7096774193548387
+      "accuracy": 0.6641975308641975,
+      "macro_f1": 0.6632922535211268,
+      "rumour_precision": 0.6813186813186813,
+      "rumour_recall": 0.6138613861386139,
+      "rumour_f1": 0.6458333333333334,
+      "non_rumour_f1": 0.6807511737089202
     }
   ],
-  "elapsed_seconds": 15708.77,
-  "timestamp": "2026-11-04 09:47:32"
+  "elapsed_seconds": 2089.22,
+  "timestamp": "2026-11-27 13:17:38"
 }

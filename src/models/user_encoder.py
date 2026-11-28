@@ -5,7 +5,7 @@ from typing import Optional
 class UserCredibilityEncoder(nn.Module):
     """
     Mã hóa vector đặc trưng uy tín người dùng (12 chiều) thành không gian biểu diễn ẩn.
-    Hỗ trợ chuẩn hóa đầu vào LayerNorm, Gated Fusion, Residual Gated Fusion, Concat Projection.
+    Hỗ trợ chuẩn hóa đầu vào LayerNorm, Gated Fusion, Concat Projection.
     """
     def __init__(
         self,
@@ -13,7 +13,7 @@ class UserCredibilityEncoder(nn.Module):
         hidden_dim: int = 64,
         output_dim: int = 128,
         dropout: float = 0.1,
-        fusion_type: str = "residual_gate",  # 'residual_gate', 'gated', 'concat', 'additive'
+        fusion_type: str = "gated",  # 'gated', 'concat', 'additive'
     ):
         super().__init__()
         self.fusion_type = fusion_type
@@ -34,7 +34,7 @@ class UserCredibilityEncoder(nn.Module):
         )
         
         # 3. Gate / Projection mechanism
-        if fusion_type in ("gated", "residual_gate"):
+        if fusion_type == "gated":
             self.gate = nn.Sequential(
                 nn.Linear(output_dim * 2, output_dim),
                 nn.Sigmoid()
@@ -56,15 +56,8 @@ class UserCredibilityEncoder(nn.Module):
         if text_repr is None:
             return u_emb
             
-        if self.fusion_type == "residual_gate":
-            # Residual Gated Fusion: Bảo toàn 100% text_repr gốc, cộng thêm điều biến từ User Credibility
-            combined = torch.cat([text_repr, u_emb], dim=-1)
-            alpha = self.gate(combined)
-            fused = text_repr + alpha * u_emb
-            return fused
-
-        elif self.fusion_type == "gated":
-            # Gated Attention truyền thống: cân bằng trọng số giữa text và user
+        if self.fusion_type == "gated":
+            # Gated Attention cân bằng trọng số giữa text và user
             combined = torch.cat([text_repr, u_emb], dim=-1)
             alpha = self.gate(combined)
             fused = alpha * text_repr + (1.0 - alpha) * u_emb

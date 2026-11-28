@@ -59,7 +59,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </div>
       <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Hệ Thống Phán Đoán Tin Đồn: UC-TTT vs. Baseline TTT</h1>
       <p class="text-xs sm:text-sm text-[var(--muted)] leading-relaxed">
-        Tái hiện mô hình cơ sở <b>Temporal Tree Transformer (Wu et al., PLOS ONE 2025)</b> và đánh giá đối chứng với mô hình đề xuất <b>UC-TTT</b> (tích hợp 12 đặc trưng độ uy tín người dùng qua cơ chế cổng động Residual Gate).
+        Tái hiện mô hình cơ sở <b>Temporal Tree Transformer (Wu et al., PLOS ONE 2025)</b> và đánh giá đối chứng với mô hình đề xuất <b>UC-TTT</b> (tích hợp 12 đặc trưng độ uy tín người dùng qua cơ chế cổng động Gated Attention).
       </p>
       <div class="flex flex-wrap gap-2 pt-1 text-xs">
         <span class="px-2.5 py-1 rounded bg-[var(--background)] border border-[var(--border)]">BERT-base (768-d)</span>
@@ -183,7 +183,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div class="border border-blue-500/30 rounded-lg p-4 bg-[var(--background)] space-y-3 ring-1 ring-blue-500/20">
           <div class="text-center pb-2 border-b border-blue-500/20">
             <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">Đề Xuất: UC-TTT (Nhóm 6)</h4>
-            <div class="text-[11px] text-[var(--muted)]">Tích hợp 12 đặc trưng User Credibility qua Cổng Residual Gate</div>
+            <div class="text-[11px] text-[var(--muted)]">Tích hợp 12 đặc trưng User Credibility qua Cổng Gated Attention</div>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-xs text-[var(--muted)]">Phán đoán:</span>
@@ -210,7 +210,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div class="border border-blue-500/30 rounded-lg p-4 bg-[var(--background)] space-y-3 ring-1 ring-blue-500/20">
           <div class="text-center pb-2 border-b border-blue-500/20">
             <h4 class="font-bold text-sm text-blue-600 dark:text-blue-400">Đề Xuất: UC-TTT (Nhóm 6)</h4>
-            <div class="text-[11px] text-[var(--muted)]">Tích hợp 12 đặc trưng User Credibility qua Cổng Residual Gate</div>
+            <div class="text-[11px] text-[var(--muted)]">Tích hợp 12 đặc trưng User Credibility qua Cổng Gated Attention</div>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-xs text-[var(--muted)]">Phán đoán:</span>
@@ -237,10 +237,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <!-- SECTION 3: TRỌNG SỐ GIẢI THÍCH -->
     <section class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
-      <h3 class="text-base font-bold flex items-center gap-2">3. Trọng Số Giải Thích Của User Credibility (Residual Gate α)</h3>
+      <h3 class="text-base font-bold flex items-center gap-2">3. Trọng Số Giải Thích Của User Credibility (Gated Attention α)</h3>
       <div class="border border-[var(--border)] rounded-lg p-4 bg-[var(--background)] space-y-3">
         <div class="text-xs text-[var(--muted)]">
-          Cơ chế Residual Gate học trọng số <b>α ∈ [0, 1]</b> để quyết định tỷ lệ dung hòa giữa <b>Độ uy tín người dùng</b> và <b>Ngữ nghĩa cấu trúc văn bản lan truyền</b>:
+          Cơ chế Gated Attention học trọng số <b>α ∈ [0, 1]</b> để quyết định tỷ lệ dung hòa giữa <b>Độ uy tín người dùng</b> và <b>Ngữ nghĩa cấu trúc văn bản lan truyền</b>:
         </div>
         
         <div class="space-y-2">

@@ -119,7 +119,7 @@ def render_header():
             <span class="badge-pill" style="color: #059669; font-weight: 600;">PHEME BENCHMARK (5-FOLD LOEO)</span>
         </div>
         <h1>Hệ Thống Phán Đoán Tin Đồn: UC-TTT vs. TTT Gốc</h1>
-        <p>Tái hiện mô hình cơ sở <b>Temporal Tree Transformer (Wu et al., PLOS ONE 2025)</b> và đánh giá đối chứng với mô hình đề xuất <b>UC-TTT</b> (tích hợp 12 đặc trưng độ uy tín người dùng qua cơ chế cổng động Residual Gate).</p>
+        <p>Tái hiện mô hình cơ sở <b>Temporal Tree Transformer (Wu et al., PLOS ONE 2025)</b> và đánh giá đối chứng với mô hình đề xuất <b>UC-TTT</b> (tích hợp 12 đặc trưng độ uy tín người dùng qua cơ chế cổng động Gated Attention).</p>
         <div class="badge-bar">
             <span class="badge-pill">BERT-base (768-d)</span>
             <span class="badge-pill">Tree Transformer (6L/12H)</span>
@@ -429,7 +429,7 @@ def main():
         st.markdown("""
         <div style="text-align: center; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px;">
             <h3 style="margin: 0; color: #1d4ed8; font-size: 17px;">Đề xuất: UC-TTT (Nhóm 6)</h3>
-            <small style="color: #2563eb;">Tích hợp thêm 12 đặc trưng Độ uy tín Người dùng với Cổng Residual Gated Attention</small>
+            <small style="color: #2563eb;">Tích hợp thêm 12 đặc trưng Độ uy tín Người dùng với Cổng Gated Attention</small>
         </div>
         """, unsafe_allow_html=True)
         
@@ -518,7 +518,7 @@ def main():
     with col_w1:
         st.markdown(f"""
         <div class="ui-card">
-            <h4 style="margin: 0 0 10px 0; color: #1e3a8a;">Tỷ trọng Đóng góp trong Cổng Dung hợp (Residual Gate)</h4>
+            <h4 style="margin: 0 0 10px 0; color: #1e3a8a;">Tỷ trọng Đóng góp trong Cổng Dung hợp (Gated Fusion)</h4>
             <div style="margin-top: 15px;">
                 <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px;">
                     <span><b>Độ uy tín Tài khoản (User Credibility):</b></span>
