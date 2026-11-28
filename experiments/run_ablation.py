@@ -412,12 +412,12 @@ def update_ablation_summary(summary_path: Path, new_result: Dict[str, Any], base
     if "full" in summary_data["variants"]:
         summary_data["baseline_full"] = summary_data["variants"]["full"]
     elif summary_data.get("baseline_full") is None:
-        # Thử đọc từ kết quả ucttt_residual_gate_events5_results.json nếu có
+        # Thử đọc từ kết quả ucttt_gated_events5_results.json nếu có
         candidate_baseline = None
         candidates = [
             baseline_path,
-            ROOT / "results/ucttt/ucttt_residual_gate_events5_results.json",
-            ROOT / "results/ucttt_residual_gate_events5_results.json",
+            ROOT / "results/ucttt/ucttt_gated_events5_results.json",
+            ROOT / "results/ucttt_gated_events5_results.json",
         ]
         for c in candidates:
             if c and c.exists():
@@ -567,8 +567,8 @@ def parse_args():
     parser.add_argument(
         "--fusion_type",
         type=str,
-        default="residual_gate",
-        choices=["residual_gate", "gated", "concat", "additive"],
+        default="gated",
+        choices=["gated", "concat", "additive"],
         help="Cơ chế dung hợp đặc trưng uy tín người dùng",
     )
     parser.add_argument("--epochs", type=int, default=35, help="Số epochs tối đa")

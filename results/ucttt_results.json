@@ -1,0 +1,242 @@
+{
+  "model_name": "User-Credibility Temporal Tree Transformer (UC-TTT, Fusion: GATED)",
+  "use_user_credibility": true,
+  "fusion_type": "gated",
+  "date": "2026-11-28 07:05:25",
+  "hyperparameters": {
+    "d_model": 768,
+    "nhead": 12,
+    "num_tree_layers": 6,
+    "num_time_windows": 8,
+    "window_mode": "fixed_posts",
+    "window_size": 8,
+    "gru_hidden_dim": 128,
+    "user_input_dim": 12,
+    "fusion_type": "gated",
+    "dropout": 0.2,
+    "lr": 4.2e-05,
+    "weight_decay": 0.0001,
+    "batch_size": 32,
+    "patience": 8,
+    "seed": 42
+  },
+  "mean_loeo": {
+    "accuracy": 0.7253791852063773,
+    "accuracy_std": 0.05799582197267414,
+    "macro_f1": 0.6964875674779016,
+    "macro_f1_std": 0.03996398839265602
+  },
+  "pooled": {
+    "accuracy": 0.7517899761336515,
+    "macro_f1": 0.7194643344743181,
+    "macro_precision": 0.7239543997813773,
+    "macro_recall": 0.7160161342113335,
+    "delta_pooled_accuracy": 0.019643840646227262,
+    "delta_pooled_macro_f1": 0.021650702405190403,
+    "class_metrics": {
+      "Non-rumour": {
+        "precision": 0.8006465517241379,
+        "recall": 0.8292410714285714,
+        "f1": 0.8146929824561403
+      },
+      "Rumour": {
+        "precision": 0.6472622478386167,
+        "recall": 0.6027911969940956,
+        "f1": 0.6242356864924958
+      }
+    },
+    "confusion_matrix": [
+      [
+        2972,
+        612
+      ],
+      [
+        740,
+        1123
+      ]
+    ]
+  },
+  "folds": [
+    {
+      "fold_idx": 0,
+      "test_event": "charliehebdo",
+      "val_event": "Stratified 30% train pool",
+      "best_epoch": 6,
+      "best_val_macro_f1": 0.7916723147423064,
+      "test_accuracy": 0.8376623376623377,
+      "test_macro_f1": 0.7732543652847259,
+      "test_macro_precision": 0.7656043593130779,
+      "test_macro_recall": 0.7823208672320652,
+      "baseline_macro_f1": 0.7511641511641511,
+      "delta_macro_f1": 0.02209021412057477,
+      "class_metrics": {
+        "Non-rumour": {
+          "precision": 0.9062087186261559,
+          "recall": 0.8823151125401929,
+          "f1": 0.8941023134571522
+        },
+        "Rumour": {
+          "precision": 0.625,
+          "recall": 0.6823266219239373,
+          "f1": 0.6524064171122995
+        }
+      },
+      "confusion_matrix": [
+        [
+          1372,
+          183
+        ],
+        [
+          142,
+          305
+        ]
+      ],
+      "training_time_seconds": 312.82
+    },
+    {
+      "fold_idx": 1,
+      "test_event": "ferguson",
+      "val_event": "Stratified 30% train pool",
+      "best_epoch": 6,
+      "best_val_macro_f1": 0.8198004527118451,
+      "test_accuracy": 0.7178217821782178,
+      "test_macro_f1": 0.6577984737942701,
+      "test_macro_precision": 0.6508467023172906,
+      "test_macro_recall": 0.6749164173397202,
+      "baseline_macro_f1": 0.6329941860465116,
+      "delta_macro_f1": 0.024804287747758558,
+      "class_metrics": {
+        "Non-rumour": {
+          "precision": 0.8441176470588235,
+          "recall": 0.7622841965471447,
+          "f1": 0.8011165387299372
+        },
+        "Rumour": {
+          "precision": 0.4575757575757576,
+          "recall": 0.5875486381322957,
+          "f1": 0.514480408858603
+        }
+      },
+      "confusion_matrix": [
+        [
+          574,
+          179
+        ],
+        [
+          106,
+          151
+        ]
+      ],
+      "training_time_seconds": 358.15
+    },
+    {
+      "fold_idx": 2,
+      "test_event": "germanwings-crash",
+      "val_event": "Stratified 30% train pool",
+      "best_epoch": 11,
+      "best_val_macro_f1": 0.8096662325468698,
+      "test_accuracy": 0.6765432098765433,
+      "test_macro_f1": 0.6765116548482095,
+      "test_macro_precision": 0.6766578831796223,
+      "test_macro_recall": 0.67657172121153,
+      "baseline_macro_f1": 0.6289076076310118,
+      "delta_macro_f1": 0.04760404721719769,
+      "class_metrics": {
+        "Non-rumour": {
+          "precision": 0.6818181818181818,
+          "recall": 0.6650246305418719,
+          "f1": 0.6733167082294265
+        },
+        "Rumour": {
+          "precision": 0.6714975845410628,
+          "recall": 0.6881188118811881,
+          "f1": 0.6797066014669927
+        }
+      },
+      "confusion_matrix": [
+        [
+          135,
+          68
+        ],
+        [
+          63,
+          139
+        ]
+      ],
+      "training_time_seconds": 637.07
+    },
+    {
+      "fold_idx": 3,
+      "test_event": "ottawashooting",
+      "val_event": "Stratified 30% train pool",
+      "best_epoch": 11,
+      "best_val_macro_f1": 0.8030970766335368,
+      "test_accuracy": 0.6872812135355892,
+      "test_macro_f1": 0.6833906791062883,
+      "test_macro_precision": 0.7147006414825374,
+      "test_macro_recall": 0.6977407002188184,
+      "baseline_macro_f1": 0.7078221079395854,
+      "delta_macro_f1": -0.024431428833297186,
+      "class_metrics": {
+        "Non-rumour": {
+          "precision": 0.6195652173913043,
+          "recall": 0.855,
+          "f1": 0.7184873949579832
+        },
+        "Rumour": {
+          "precision": 0.8098360655737705,
+          "recall": 0.5404814004376368,
+          "f1": 0.6482939632545932
+        }
+      },
+      "confusion_matrix": [
+        [
+          342,
+          58
+        ],
+        [
+          210,
+          247
+        ]
+      ],
+      "training_time_seconds": 526.69
+    },
+    {
+      "fold_idx": 4,
+      "test_event": "sydneysiege",
+      "val_event": "Stratified 30% train pool",
+      "best_epoch": 9,
+      "best_val_macro_f1": 0.8129014454222686,
+      "test_accuracy": 0.7075873827791986,
+      "test_macro_f1": 0.6914826643560144,
+      "test_macro_precision": 0.7043354552469137,
+      "test_macro_recall": 0.6888751857355127,
+      "baseline_macro_f1": 0.6490114440789052,
+      "delta_macro_f1": 0.042471220277109145,
+      "class_metrics": {
+        "Non-rumour": {
+          "precision": 0.71484375,
+          "recall": 0.8157503714710252,
+          "f1": 0.761970853573907
+        },
+        "Rumour": {
+          "precision": 0.6938271604938272,
+          "recall": 0.562,
+          "f1": 0.6209944751381216
+        }
+      },
+      "confusion_matrix": [
+        [
+          549,
+          124
+        ],
+        [
+          219,
+          281
+        ]
+      ],
+      "training_time_seconds": 446.87
+    }
+  ],
+  "total_time_seconds": 2291.46
+}

@@ -67,7 +67,10 @@ class RumorDetectionDemoEngine:
             return self.model_cache[fold_idx]
             
         ttt_ckpt_path = self.root_dir / "results" / "checkpoints" / "ttt_baseline" / f"ttt_baseline_fold_{fold_idx}.pt"
-        uc_ckpt_path = self.root_dir / "results" / "checkpoints" / "ucttt" / f"ucttt_residual_gate_mode5_fold_{fold_idx}.pt"
+        uc_dir = self.root_dir / "results" / "checkpoints" / "ucttt"
+        uc_ckpt_path = uc_dir / f"ucttt_fold_{fold_idx}.pt"
+        if not uc_ckpt_path.exists():
+            uc_ckpt_path = uc_dir / f"ucttt_gated_mode5_fold_{fold_idx}.pt"
         
         if not ttt_ckpt_path.exists():
             raise FileNotFoundError(f"Không tìm thấy checkpoint TTT Baseline: {ttt_ckpt_path}")
@@ -90,7 +93,7 @@ class RumorDetectionDemoEngine:
         model_ttt.load_state_dict(state_ttt)
         model_ttt.eval()
         
-        # 2. Khởi tạo & nạp trọng số UC-TTT Proposed (use_user_credibility=True, residual_gate)
+        # 2. Khởi tạo & nạp trọng số UC-TTT Proposed (use_user_credibility=True, gated)
         model_uc = UserCredibilityTemporalTreeTransformer(
             text_input_dim=768,
             d_model=768,
@@ -98,7 +101,7 @@ class RumorDetectionDemoEngine:
             num_tree_layers=6,
             fc_hidden_dim=600,
             use_user_credibility=True,
-            fusion_type="residual_gate",
+            fusion_type="gated",
             window_aggregation="cumulative",
         ).to(self.device)
         
@@ -288,7 +291,7 @@ class RumorDetectionDemoEngine:
             gate_root_mean = float(alpha_root_vec.mean())
             gate_overall_mean = float(alpha_all.mean().item())
             
-            h_node_fused = h_text_uc + alpha_all * u_all
+            h_node_fused = alpha_all * h_text_uc + (1.0 - alpha_all) * u_all
             tree_attn_uc = torch.zeros(adj.shape, dtype=texts.dtype, device=self.device).masked_fill(~adj, float("-inf")).repeat_interleave(model_uc.nhead, dim=0)
             h_tree_uc = model_uc.tree_transformer(h_node_fused, attn_mask=tree_attn_uc)
             
@@ -332,8 +335,8 @@ class RumorDetectionDemoEngine:
         src_raw_u = thread["source_tweet"].get("raw_user", thread["source_tweet"].get("user", {}))
         cred_score = self.user_extractor.compute_credibility_score(src_raw_u)
         
-        user_weight_pct = round(gate_root_mean * 100.0, 1)
-        text_weight_pct = round((1.0 - gate_root_mean) * 100.0, 1)
+        text_weight_pct = round(gate_root_mean * 100.0, 1)
+        user_weight_pct = round((1.0 - gate_root_mean) * 100.0, 1)
         
         if src_raw_u.get("verified", False) or cred_score >= 70:
             exp_text = f"Mô hình phân bổ {user_weight_pct}% trọng số vào độ uy tín tài khoản và {text_weight_pct}% vào ngữ nghĩa văn bản. Tài khoản có tick xanh và chỉ số tương tác cao giúp củng cố độ tin cậy của thông tin."
@@ -434,7 +437,7 @@ class RumorDetectionDemoEngine:
             "delta_f1": "+0.00%",
             "vram": "~2.1 GB",
             "speed": "1.6x",
-            "description": "Mô hình đề xuất tích hợp trọn vẹn 12 đặc trưng User Credibility qua Residual Gate.",
+            "description": "Mô hình đề xuất tích hợp trọn vẹn 12 đặc trưng User Credibility qua Gated Attention.",
             "key_insight": "Cân bằng toàn diện nhất, bảo toàn khả năng nhận diện tại mọi sự kiện mà không bị suy thoái tại thảm họa hay bạo động.",
             "event_f1": full_event_map,
         })

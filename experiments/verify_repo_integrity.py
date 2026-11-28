@@ -45,7 +45,10 @@ def main():
     print("\n4. Kiểm tra các checkpoints đã lưu trong results/checkpoints/:")
     for idx, ev in enumerate(pheme_5_events):
         ttt_ckpt = ROOT / f"results/checkpoints/ttt_baseline/ttt_baseline_fold_{idx}.pt"
-        uc_ckpt = ROOT / f"results/checkpoints/ucttt/ucttt_residual_gate_mode5_fold_{idx}.pt"
+        uc_dir = ROOT / "results/checkpoints/ucttt"
+        uc_ckpt = uc_dir / f"ucttt_fold_{idx}.pt"
+        if not uc_ckpt.exists():
+            uc_ckpt = uc_dir / f"ucttt_gated_mode5_fold_{idx}.pt"
         print(f"  Fold {idx} ({ev}):")
         print(f"    - TTT: {ttt_ckpt.exists()} ({ttt_ckpt.stat().st_size:,} bytes)" if ttt_ckpt.exists() else f"    - TTT: Không tìm thấy!")
         print(f"    - UC : {uc_ckpt.exists()} ({uc_ckpt.stat().st_size:,} bytes)" if uc_ckpt.exists() else f"    - UC : Không tìm thấy!")

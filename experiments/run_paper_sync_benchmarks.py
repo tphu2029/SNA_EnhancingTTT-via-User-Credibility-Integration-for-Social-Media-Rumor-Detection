@@ -28,7 +28,7 @@ def run_command(cmd, desc):
     print(f"\n[HOÀN THÀNH] {desc} trong {elapsed:.1f}s ({elapsed / 60:.2f} phút).")
 
 
-def build_comparison_table(fusion_type="residual_gate"):
+def build_comparison_table(fusion_type="gated"):
     ttt_path = ROOT / "results/ttt_baseline_results.json"
     ucttt_path = ROOT / f"results/ucttt/ucttt_{fusion_type}_events5_results.json"
 
@@ -169,7 +169,7 @@ def main():
                         help="Số bài viết / cửa sổ (k=8)")
     parser.add_argument("--num_time_windows", type=int, default=8,
                         help="Số cửa sổ tối đa hoặc số lát cắt (K=8)")
-    parser.add_argument("--fusion_type", default="residual_gate", choices=["residual_gate", "gated", "cross_attention", "concatenation"],
+    parser.add_argument("--fusion_type", default="gated", choices=["gated", "cross_attention", "concatenation"],
                         help="Loại fusion trong UC-TTT")
     parser.add_argument("--val_ratio", type=float, default=0.30, help="Tỷ lệ validation split từ 4 sự kiện còn lại (mặc định 0.30 tức 7:3)")
     parser.add_argument("--checkpoint_criterion", default="loss_stabilize", choices=["loss_stabilize", "min_loss", "max_f1"], help="Tiêu chí chọn checkpoint")
@@ -206,7 +206,7 @@ def main():
     ]
     run_command(cmd_ttt, "LẦN 1: HUẤN LUYỆN TTT BASELINE (WU ET AL. 2025 - KHÔNG BẬT UC)")
 
-    # 2. Chạy Lần 2: UC-TTT Proposed (bật User Credibility với Gated/Residual-Gate Fusion)
+    # 2. Chạy Lần 2: UC-TTT Proposed (bật User Credibility với Gated Fusion)
     cmd_ucttt = [
         py_exec,
         "-u",

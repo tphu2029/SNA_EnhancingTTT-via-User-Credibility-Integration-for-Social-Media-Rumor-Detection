@@ -42,7 +42,7 @@ class UserCredibilityTemporalTreeTransformer(nn.Module):
         fc_hidden_dim: int = 600,           # Chiều ẩn FC Classifier (Wu et al. 2025: 600)
         num_classes: int = 2,               # Rumour vs Non-rumour
         use_user_credibility: bool = True,  # Công tắc bật/tắt User Credibility (cho Baseline TTT gốc)
-        fusion_type: str = "gated",         # 'gated', 'residual_gate', 'concat', 'additive'
+        fusion_type: str = "gated",         # 'gated', 'concat', 'additive'
         window_aggregation: str = "cumulative", # 'cumulative' (chuẩn bài báo Wu et al. 2025) hoặc 'disjoint'
         use_root_user_shortcut: bool = False,# Tắt root user shortcut để tránh overfitting out-of-domain
         use_tree_transformer: bool = True,  # Bóc tách kiến trúc: Bật/tắt Tree Transformer

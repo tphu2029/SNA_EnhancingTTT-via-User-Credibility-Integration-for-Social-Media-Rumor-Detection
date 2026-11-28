@@ -25,7 +25,7 @@ PJ/
 │   │   ├── dataset.py                      # PyTorch Dataset & dynamic batch collate function
 │   │   └── export_summaries.py             # Xuất thống kê tổng hợp bộ dữ liệu PHEME
 │   ├── models/
-│   │   ├── user_encoder.py                 # MLP & Fusion (gated / residual_gate / concat / bilinear)
+│   │   ├── user_encoder.py                 # MLP & Fusion (gated / concat / additive)
 │   │   ├── tree_transformer.py             # Tree Transformer Attention Layer
 │   │   ├── temporal_gru.py                 # Temporal GRU tổng hợp lát cắt thời gian
 │   │   └── ucttt_classifier.py             # End-to-end model UC-TTT & TTT Baseline

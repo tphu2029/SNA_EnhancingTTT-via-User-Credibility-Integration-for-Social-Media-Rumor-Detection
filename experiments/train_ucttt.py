@@ -88,9 +88,9 @@ def parse_args():
     parser.add_argument(
         "--fusion_type",
         type=str,
-        choices=["residual_gate", "gated", "concat", "additive", "residual"],
+        choices=["gated", "concat", "additive", "residual"],
         default="gated",
-        help="Chiến lược dung hợp đặc trưng uy tín: 'gated' (chuẩn bài báo), 'residual_gate', 'concat', 'additive'",
+        help="Chiến lược dung hợp đặc trưng uy tín: 'gated' (cổng cân bằng Text-User), 'concat', 'additive'",
     )
     parser.add_argument(
         "--use_root_user_shortcut",
